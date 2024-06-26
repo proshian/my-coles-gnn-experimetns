@@ -1,3 +1,99 @@
+# Docker
+## Dependencies to be installed on host
+Before building the dockerfile you should
+1. Install cuda toolkit 12.1.0 or later on your host machine ([follow official instructions](https://developer.nvidia.com/cuda-12-1-0-download-archive?target_os=Linux&target_arch=x86_64&Distribution=Ubuntu&target_version=18.04&target_type=deb_local))
+2. Install NVIDIA Container Toolkit on your host machine (instructions are below)
+
+NVIDIA Container Toolkit installation instrucitons: 
+
+```python
+# Add the package repositories
+distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey | sudo apt-key add -
+curl -s -L https://nvidia.github.io/nvidia-docker/$distribution/nvidia-docker.list | sudo tee /etc/apt/sources.list.d/nvidia-docker.list
+
+# Install the NVIDIA Docker package
+sudo apt-get update
+sudo apt-get install -y nvidia-docker2
+
+# Restart the Docker daemon to apply the changes
+sudo systemctl restart docker
+
+```
+
+## Build
+```sh
+docker build -t proshian/ptls-experiments .
+```
+## Run
+```sh
+docker run --gpus all --ipc=host -it --rm -p 6006:6006 -p 8082:8082 -p 4041:4041 proshian/ptls-experiments 
+```
+
+
+# Known problems
+
+Хоть `bin/make_datasets_spark_file.sh` корректно отрабатывает, процесс невозможно отследить через `localhost:4041`. При запуске вне контейнера по этому порту доступен UI, демонстррующий статус задачи.
+
+# Nano documentation :)
+
+Since all experiments are similar we'll consider scenario_age_pred
+
+* bin/get-data.sh downloads original data. It's usually a tebale with each row representing a single transaction
+* bin/make_datasets_spark_file.sh uses spark to convert the dataset to a ptls format. The result are two files: train_trx_file.parquet, test_trx_file.parquet and test_ids_file.csv. It's a parket file where keys store sequences for a user. So each element represents a user and each colun is a 1d nd.array with activity info by the user. This script actually launches ptls.make_datasets_spark.DatasetConverter().run(). An example can be seen in CoLES-investigation repo.
+* `scenario_run_all` runs data splitting before running scenarios. The result is stored in `embeddings_validation.work/folds` Info on data spliting is below
+
+## Data splitting
+```python -m embeddings_validation \
+    --config-dir conf --config-name embeddings_validation_baselines_supervised +workers=10 +total_cpu_count=20 \
+    +split_only=True
+```
+
+```
+Splits data into n folds (train, validation, test),
+saves them to files and creates folds.json file with paths to these files.
+The saved files are dumped TargetFile objects that contain 
+ids and target values (subset of the original data).
+Use TargetFile.load(path) to load theese files.
+TargetFile = embeddings_validation.file_reader.TargetFile
+Main interface of TargetFile are pseudo properties:
+* .ids_values
+* .target_values
+The Target (Luigi Target) of this task is folds.json file with folds information.
+The split can be done in two ways (self.conf.validation_schema):
+* VALID_TRAIN_TEST
+* VALID_CROSS_VAL
+For both split types the folds Dict has the same structure:
+Keys represent fold number and values are dictionaries with keys:
+- 'train': dictionary with keys 'path' and 'shape' representing path to the train data and its shape
+- 'valid': dictionary with keys 'path' and 'shape' representing path to the validation data and its shape
+- 'test': dictionary with keys 'path' and 'shape' representing path to the test data and its shape
+
+Test data is optional. If it is not provided, the 'test' property is None.
+If it's providded, regardless of the split type, the 'test' 
+property is always the same (same path and shape for all folds).
+If validation_schema is VALID_CROSS_VAL:
+* Fold numbers are integers from 0 to self.conf['split']['cv_split_count'] - 1
+* Each fold contains train and validation data randomly split from the train data
+If validation_schema is VALID_TRAIN_TEST:
+* Fold numbers are integers from 0 to self.conf['split']['n_iteration'] - 1
+* Each fold is exactly the same (Uses given train, validation and test ids); 
+    same path and shape for all folds
+```
+
+
+
+
+
+<br>
+<br>
+<br>
+<br>
+<br>
+
+
+# Original README
+
 Experiments on public datasets for `pytorch-lifestream` library
 
 # Setup and test using pipenv

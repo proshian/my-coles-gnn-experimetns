@@ -11,4 +11,4 @@ split_dataset          : Train size: 47000 clients
 split_dataset          : Test size: 3000 clients
 save_features          : Saved to: "/home/proshian/Documents/ptls-experiments/scenario_age_pred/data/train_trx_file.parquet"
 save_features          : Saved to: "/home/proshian/Documents/ptls-experiments/scenario_age_pred/data/test_trx_file.parquet"
-run                    : Data collected in 345 sec (0:05:45.410220)
+run                    : Data collected in 195 sec (0:03:15.358614)

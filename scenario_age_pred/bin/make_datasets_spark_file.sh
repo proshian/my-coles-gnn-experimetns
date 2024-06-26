@@ -4,7 +4,7 @@ export PYTHONPATH="../../"
 SPARK_LOCAL_IP="127.0.0.1" spark-submit \
     --master local[8] \
     --name "Age Make Dataset" \
-    --driver-memory 16G \
+    --driver-memory 8G \
     --conf spark.sql.shuffle.partitions=100 \
     --conf spark.sql.parquet.compression.codec="snappy" \
     --conf spark.ui.port=4041 \
