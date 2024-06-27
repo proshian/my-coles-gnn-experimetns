@@ -11,22 +11,4 @@ echo "==== Device cuda:${CUDA_VISIBLE_DEVICES} will be used"
 
 echo ""
 echo "==== Start coles run"
-sh bin/scenario_coles_only.sh
-
-
-#echo ""
-#echo "==== Hyper parameters tuning"
-#
-#sh bin/scenario_encoder_type.sh
-#sh bin/scenario_hidden_size.sh
-#sh bin/scenario_lr_schedule.sh
-#sh bin/scenario_ml_loss.sh
-#sh bin/scenario_sampling_strategy.sh
-#sh bin/scenario_sub_seq_sampling_strategy.sh
-#sh bin/scenario_semi_supervised.sh
-#
-#
-#echo ""
-#echo "==== Other scenarios"
-#
-#sh bin/scenario_projection_head.sh
+sh bin/scenario_coles_only__for_check.sh
