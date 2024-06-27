@@ -1,7 +1,7 @@
 defaults:
   - _self_
   - dataset_unsupervised/parquet
-  - inference/default
+  - inference/smaller_for_check.yaml
   - inference/seq_encoder/pretrained
 
 seed_everything: 42
@@ -27,10 +27,10 @@ data_module:
       cnt_min: 25
       cnt_max: 100
     data: ${dataset_unsupervised.valid}
-  train_batch_size: 64
-  train_num_workers: 16
-  valid_batch_size: 512
-  valid_num_workers: 16
+  train_batch_size: 32
+  train_num_workers: 4
+  valid_batch_size: 32
+  valid_num_workers: 4
 
 trainer: 
   accelerator: gpu
