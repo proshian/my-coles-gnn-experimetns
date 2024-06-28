@@ -246,6 +246,9 @@ class TrxEncoder_WithClientIds(TrxEncoderBase):
 
         if self.linear_projection_head is not None:
             out = self.linear_projection_head(out)
+        
+        print(f"{PaddedBatch(out, feats_pb.seq_lens).payload.shape = }")
+        print(f"{PaddedBatch(out, feats_pb.seq_lens).seq_len_mask.shape = }")
         return PaddedBatch(out, feats_pb.seq_lens)
     
 

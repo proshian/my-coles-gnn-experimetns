@@ -13,9 +13,9 @@ logger = logging.getLogger(__name__)
 
 @hydra.main(version_base='1.2', config_path=None, config_name=None)
 def main(conf: DictConfig):
-    print("config:\n")
-    print(OmegaConf.to_yaml(conf))
-    print("config_end\n\n\n")
+    # print("config:\n")
+    # print(OmegaConf.to_yaml(conf))
+    # print("config_end\n\n\n")
 
     if 'seed_everything' in conf:
         pl.seed_everything(conf.seed_everything)
