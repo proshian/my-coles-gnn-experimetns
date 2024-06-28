@@ -5,7 +5,7 @@ from ptls.data_load.padded_batch import PaddedBatch
 from ptls.nn.trx_encoder.trx_encoder_base import TrxEncoderBase
 from ptls.nn.seq_encoder.containers import SeqEncoderContainer
 
-from ..nn.avg_pool import GlobalAvgPoolAndLinear
+from .avg_pool import GlobalAvgPoolAndLinear
 
 class AvgPoolLinearEncoder(torch.nn.Module):
     def __init__(self, input_size: int, output_size: int):

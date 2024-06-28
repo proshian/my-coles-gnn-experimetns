@@ -8,7 +8,7 @@ from ptls.nn.trx_encoder.noisy_embedding import NoisyEmbedding
 from ptls.nn.trx_encoder.trx_encoder_base import TrxEncoderBase
 from ptls.nn.trx_encoder.encoders import BaseEncoder  # for type hinting
 
-from .client_item_embedding import BaseClientItemEncoder
+from .client_item_encoder import BaseClientItemEncoder
 
 
 
@@ -247,8 +247,6 @@ class TrxEncoder_WithClientIds(TrxEncoderBase):
         if self.linear_projection_head is not None:
             out = self.linear_projection_head(out)
         
-        print(f"{PaddedBatch(out, feats_pb.seq_lens).payload.shape = }")
-        print(f"{PaddedBatch(out, feats_pb.seq_lens).seq_len_mask.shape = }")
         return PaddedBatch(out, feats_pb.seq_lens)
     
 

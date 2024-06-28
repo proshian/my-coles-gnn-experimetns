@@ -11,6 +11,7 @@ echo "==== Device cuda:${CUDA_VISIBLE_DEVICES} will be used"
 
 echo ""
 echo "==== Start coles run"
+# PYTHONPATH is set to make ptls_extension_2024_research module available
 PYTHONPATH=.. python -m pl_train_module \
     --config-dir conf --config-name mles_average_pool_experimeny__params \
     data_module.train_data.splitter.split_count=2 \

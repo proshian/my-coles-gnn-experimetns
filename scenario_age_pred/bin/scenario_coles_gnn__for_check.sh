@@ -2,7 +2,7 @@
 # was 0.637
 # python -m ptls.pl_train_module \
 
-# PYTHONPATH is set to make coles_and_gnn_frame available
+# PYTHONPATH is set to make ptls_extension_2024_research module available
 PYTHONPATH=.. python -m pl_train_module \
     --config-dir conf --config-name coles_gnn_params \
     data_module.train_data.splitter.split_count=2 \

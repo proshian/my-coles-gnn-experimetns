@@ -45,7 +45,7 @@ pl_module:
     K: 4
     metric: cosine
   seq_encoder:
-    _target_: coles_and_gnn_frame.seq_encoder.avg_pool_seq_encoder.AvgPoolLinearSeqEncoder
+    _target_: ptls_extension_2024_research.AvgPoolLinearSeqEncoder
     trx_encoder:
       _target_: ptls.nn.TrxEncoder
       norm_embeddings: false
