@@ -39,7 +39,7 @@ trainer:
   deterministic: true
 
 pl_module:
-  _target_: ptls_extension_2024_research.CoLESModuleMyTrx
+  _target_: ptls_extension_2024_research.CoLESModule_CITrx
   validation_metric:
     _target_: ptls.frames.coles.metric.BatchRecallTopK
     K: 4
@@ -47,7 +47,7 @@ pl_module:
   seq_encoder:
     _target_: ptls.nn.RnnSeqEncoder
     trx_encoder:
-      _target_: ptls_extension_2024_research.TrxEncoder_WithClientIds
+      _target_: ptls_extension_2024_research.TrxEncoder_WithCIEmbeddings
       norm_embeddings: false
       embeddings_noise: 0.003
       embeddings:

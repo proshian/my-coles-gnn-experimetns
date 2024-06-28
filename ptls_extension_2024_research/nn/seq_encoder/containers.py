@@ -7,6 +7,7 @@ from ptls.nn.seq_encoder.containers import SeqEncoderContainer
 
 from .avg_pool import GlobalAvgPoolAndLinear
 
+
 class AvgPoolLinearEncoder(torch.nn.Module):
     def __init__(self, input_size: int, output_size: int):
         super().__init__()

@@ -12,7 +12,7 @@ from .client_item_encoder import BaseClientItemEncoder
 
 
 
-class TrxEncoder_WithClientIds(TrxEncoderBase):
+class TrxEncoder_WithCIEmbeddings(TrxEncoderBase):
     """
     A NON-CLIENT-AGNOSTIC Network layer which creates 
     a representation for single transactions.
@@ -64,6 +64,12 @@ class TrxEncoder_WithClientIds(TrxEncoderBase):
             An embedder is an object of a class that must 
             inherit from ptls.nn.trx_encoder.encoders.BaseEncoder 
             and define output_size property.
+        
+        col_item_ids:
+            Column name in input padded batch that contains item ids.
+            This column will be used to get item embeddings from `client_item_embeddings`
+        client_item_embeddings:
+            List of `BaseClientItemEncoder` objects.
 
         embeddings_noise (float):
             Noise level for embedding. `0` meens without noise

@@ -20,10 +20,10 @@ class ColesDataset(FeatureDict, torch.utils.data.Dataset):
     * Collate_fn returns REAL client_ids instead of 
       just different integers for different clients retirieved via enumerate.
     * An i-th dataset element contains not only n dicts representing 
-      splits of sequential features, but also an id. There seems no other way 
+      splits of sequential features, but also an id. This is required
       to get real ids in collate_fn. Even if we don't take client_ids 
       from the table but consider index in a dataset as an id, we can't get
-      theese indexes in `collate_fn`.
+      theese indexes in `collate_fn` without making them a part of a dataset element.
       
     Dataset for ptls.frames.coles.CoLESModule
 

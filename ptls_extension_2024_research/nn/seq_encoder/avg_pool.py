@@ -19,7 +19,6 @@ class GlobalAvgPool(torch.nn.Module):
         return x
 
 
-
 class GlobalAvgPoolAndLinear(torch.nn.Module):
     def __init__(self, in_features: int, out_features: int):
         super().__init__()

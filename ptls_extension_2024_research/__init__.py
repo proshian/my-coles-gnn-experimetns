@@ -1,5 +1,5 @@
 from .nn.trx_encoder.client_item_encoder import BaseClientItemEncoder, DummyGNNClientItemEncoder
-from .frames.coles_client_id_aware.coles_module__trx_uses_client_ids import CoLESModuleMyTrx
-from .nn.trx_encoder.my_trx_encoder import TrxEncoder_WithClientIds
+from .frames.coles_client_id_aware.coles_module__trx_with_ci_embs import CoLESModule_CITrx
+from .nn.trx_encoder.trx_encoder_with_client_item_embeddings import TrxEncoder_WithCIEmbeddings
 from .frames.coles_client_id_aware.coles_dataset_real_client_ids import ColesDataset
 from .nn.seq_encoder.containers import AvgPoolLinearSeqEncoder

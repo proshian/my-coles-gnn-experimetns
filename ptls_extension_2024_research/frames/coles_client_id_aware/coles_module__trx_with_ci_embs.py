@@ -3,10 +3,10 @@ from ptls.data_load.padded_batch import PaddedBatch  # for typing
 from ptls.frames.coles import CoLESModule
 
 
-class CoLESModuleMyTrx(CoLESModule):
+class CoLESModule_CITrx(CoLESModule):
     """
     Same as ptls.frames.coles.CoLESModule, except 
-    TrxEncoder_WithClientIds is used as trx_encoder and thus 
+    TrxEncoder_WithClientItemEmbeddings is used as trx_encoder and thus 
     it takes a tuple:
     (`padded_batch_of_dict_with_seq_feats`, `client_ids`)
     instead of just `padded_batch_of_dict_with_seq_feats`
