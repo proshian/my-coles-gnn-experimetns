@@ -1,7 +1,7 @@
 defaults:
   - _self_
   - dataset_unsupervised/parquet
-  - inference/smaller_for_check.yaml
+  - inference/default
   - inference/seq_encoder/pretrained
 
 seed_everything: 42
@@ -27,10 +27,10 @@ data_module:
       cnt_min: 25
       cnt_max: 100
     data: ${dataset_unsupervised.valid}
-  train_batch_size: 32
-  train_num_workers: 4
-  valid_batch_size: 32
-  valid_num_workers: 4
+  train_batch_size: 64
+  train_num_workers: 16
+  valid_batch_size: 512
+  valid_num_workers: 16
 
 trainer: 
   accelerator: gpu
@@ -45,7 +45,7 @@ pl_module:
     K: 4
     metric: cosine
   seq_encoder:
-    _target_: ptls.nn.RnnSeqEncoder
+    _target_: ptls_extension_2024_research.AvgPoolLinearSeqEncoder
     trx_encoder:
       _target_: ptls.nn.TrxEncoder
       norm_embeddings: false
@@ -59,10 +59,6 @@ pl_module:
           out: 16
       numeric_values: 
         amount_rur: identity
-    type: gru
-    hidden_size: 800
-    bidir: false
-    trainable_starter: static
   head:
     _target_: ptls.nn.Head
     use_norm_encoder: true
@@ -82,3 +78,4 @@ pl_module:
     _target_: torch.optim.lr_scheduler.StepLR
     step_size: 30
     gamma: 0.9025
+    
