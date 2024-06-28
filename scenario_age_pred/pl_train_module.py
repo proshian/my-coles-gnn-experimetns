@@ -1,3 +1,9 @@
+import os; import sys; sys.path.insert(0, os.path.abspath('..'))
+
+import coles_and_gnn_frame
+print("cucucuc")
+print(type(coles_and_gnn_frame.CoLESModuleMyTrx))
+
 import logging
 
 import hydra

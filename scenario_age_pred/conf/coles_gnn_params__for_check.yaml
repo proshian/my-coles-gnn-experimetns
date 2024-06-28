@@ -12,7 +12,7 @@ embed_file_name: coles_gnn_check__embeddings
 data_module:
   _target_: ptls.frames.PtlsDataModule
   train_data:
-    _target_: ptls.coles_dataset_real_client_ids.ColesDataset
+    _target_: coles_and_gnn_frame.ColesDataset
     splitter:
       _target_: ptls.frames.coles.split_strategy.SampleSlices
       split_count: 5
@@ -39,7 +39,7 @@ trainer:
   deterministic: true
 
 pl_module:
-  _target_: coles_and_gnn_frame.coles_module__trx_uses_client_ids.CoLESModule
+  _target_: coles_and_gnn_frame.CoLESModuleMyTrx
   validation_metric:
     _target_: ptls.frames.coles.metric.BatchRecallTopK
     K: 4
@@ -47,7 +47,7 @@ pl_module:
   seq_encoder:
     _target_: ptls.nn.RnnSeqEncoder
     trx_encoder:
-      _target_: coles_and_gnn_frame.my_trx_encoder.TrxEncoder_WithClientIds
+      _target_: coles_and_gnn_frame.TrxEncoder_WithClientIds
       norm_embeddings: false
       embeddings_noise: 0.003
       embeddings:
@@ -59,6 +59,8 @@ pl_module:
           out: 16
       numeric_values: 
         amount_rur: identity
+      # col_item_ids: small_group
+      # client_item_embeddings: [coles_and_gnn_frame.DummyClientItemEmbeddings]
     type: gru
     hidden_size: 800
     bidir: false

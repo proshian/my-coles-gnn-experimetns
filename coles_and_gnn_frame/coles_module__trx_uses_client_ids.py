@@ -5,10 +5,11 @@ from ptls.frames.coles import CoLESModule
 
 class CoLESModuleMyTrx(CoLESModule):
     """
-    Same as ptls.frames.coles.CoLESModule,
-    but transaction_encoder takes a tuple:
-    (padded_batch_of_dict_with_seq_feats, client_ids)
-    instead of just client_ids
+    Same as ptls.frames.coles.CoLESModule, except 
+    TrxEncoder_WithClientIds is used as trx_encoder and thus 
+    it takes a tuple:
+    (`padded_batch_of_dict_with_seq_feats`, `client_ids`)
+    instead of just `padded_batch_of_dict_with_seq_feats`
     """
     def shared_step(self, x: PaddedBatch, client_ids: torch.Tensor):
         y_h = self((x, client_ids))

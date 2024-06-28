@@ -77,17 +77,17 @@ class ColesDataset(FeatureDict, torch.utils.data.Dataset):
         return [{k: v[ix] for k, v in feature_arrays.items() if self.is_seq_feature(k, v)} for ix in indexes]
 
     @staticmethod
-    def collate_fn(batch: List[SplitsType, int]
+    def collate_fn(batch: List[Tuple[SplitsType, int]]
                    ) -> Tuple[PaddedBatch, torch.Tensor]:
         batch_seqs, client_ids = zip(*batch)
 
         # ! Myabe it would be better to retrieve split_count via n*
-        n_clients = len(client_ids)
-        split_count = len(batch_seqs) / n_clients
+        split_count = len(batch_seqs[0])
         
+        # !!!! client_ids is a tuple of strings insted of integers!!!! Check why
         # Repeat each id `split_count` times to match batch_seqs.
-        clien_ids = [c_id for c_id in clien_ids for _ in range(split_count)]
-
+        client_ids = [int(client_id) for client_id in client_ids for _ in range(split_count)]
+        
         # Flatten `List[List[Dict[str, np.ndarray]]]` to `List[Dict[str, np.ndarray]]`.
         batch_seqs = reduce(iadd, batch_seqs)
         padded_batch_seqs = collate_feature_dict(batch_seqs)

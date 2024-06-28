@@ -8,7 +8,7 @@ from ptls.nn.trx_encoder.noisy_embedding import NoisyEmbedding
 from ptls.nn.trx_encoder.trx_encoder_base import TrxEncoderBase
 from ptls.nn.trx_encoder.encoders import BaseEncoder  # for type hinting
 
-from client_item_embedding import BaseClientItemEncoder
+from .client_item_embedding import BaseClientItemEncoder
 
 
 
@@ -129,9 +129,7 @@ class TrxEncoder_WithClientIds(TrxEncoderBase):
             embeddings = {}
         if custom_embeddings is None:
             custom_embeddings = {}
-        if client_item_embeddings is None:
-            client_item_embeddings = []
-        self.client_item_embeddings = torch.nn.ModuleList(client_item_embeddings)
+
 
         noisy_embeddings = {}
         for emb_name, emb_props in embeddings.items():
@@ -155,6 +153,11 @@ class TrxEncoder_WithClientIds(TrxEncoderBase):
             custom_embeddings=custom_embeddings,
             out_of_index=out_of_index,
         )
+
+
+        if client_item_embeddings is None:
+            client_item_embeddings = []
+        self.client_item_embeddings = torch.nn.ModuleList(client_item_embeddings)
 
         custom_embedding_size = self.custom_embedding_size
         if use_batch_norm and custom_embedding_size > 0:
@@ -233,9 +236,10 @@ class TrxEncoder_WithClientIds(TrxEncoderBase):
             # custom_embeddings_tensor.shape = (B, T, H_embeder_0 + H_embeder_1 + ... H_embeder_n)
             processed_embeddings.append(custom_embeddings_tensor)
 
-        item_ids = feats_pb.payload[self.col_item_ids]
-        processed_client_item_embeddings_lst = self._get_client_item_embeddings_lst(item_ids, client_ids)
-        processed_embeddings.extend(processed_client_item_embeddings_lst)
+        if self.client_item_embeddings:
+            item_ids = feats_pb.payload[self.col_item_ids]
+            processed_client_item_embeddings_lst = self._get_client_item_embeddings_lst(item_ids, client_ids)
+            processed_embeddings.extend(processed_client_item_embeddings_lst)
         
         
         out = torch.cat(processed_embeddings, dim=2)
@@ -247,7 +251,7 @@ class TrxEncoder_WithClientIds(TrxEncoderBase):
 
     @property
     def client_item_embedding_size(self):
-        return sum(e.output_size for e in self.client_item_embeddings.values())
+        return sum(e.output_size for e in self.client_item_embeddings)
 
     @property
     def output_size(self):
