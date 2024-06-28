@@ -30,7 +30,7 @@ class DummyGNNClientItemEncoder(BaseClientItemEncoder):
         item_ids: torch.Tensor, shape: (batch_size, seq_len)
         """
         batch_size, seq_len = item_ids.size()
-        return torch.zeros(batch_size, seq_len, self.output_size)
+        return torch.zeros(batch_size, seq_len, self.output_size, device=item_ids.device)
 
     @property
     def output_size(self):

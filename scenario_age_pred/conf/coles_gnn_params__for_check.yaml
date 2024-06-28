@@ -59,8 +59,10 @@ pl_module:
           out: 16
       numeric_values: 
         amount_rur: identity
-      # col_item_ids: small_group
-      # client_item_embeddings: [coles_and_gnn_frame.DummyClientItemEmbeddings]
+      col_item_ids: small_group
+      client_item_embeddings: [
+          _target_: coles_and_gnn_frame.DummyGNNClientItemEncoder
+        ]
     type: gru
     hidden_size: 800
     bidir: false
