@@ -1,4 +1,4 @@
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from functools import reduce
 from operator import iadd
 
@@ -25,7 +25,7 @@ class ColesDataset(FeatureDict, torch.utils.data.Dataset):
       from the table but consider index in a dataset as an id, we can't get
       theese indexes in `collate_fn` without making them a part of a dataset element.
       
-    Dataset for ptls.frames.coles.CoLESModule
+    Dataset for `ptls_extension_2024_research.frames.coles_client_aware.CoLESModule_CITrx`
 
     Parameters
     ----------
@@ -36,13 +36,15 @@ class ColesDataset(FeatureDict, torch.utils.data.Dataset):
         Used to split original sequence into subsequences which are samples from one client.
     col_time:
         column name with event_time
+    col_client_id:
+        column name with client_id
     """
 
     def __init__(self,
                  data,
                  splitter: AbsSplit,
                  col_time: str = 'event_time',
-                 col_client_id: str = 'client_id',
+                 col_client_id: Optional[str] = None,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)  # required for mixin class
 
@@ -60,11 +62,13 @@ class ColesDataset(FeatureDict, torch.utils.data.Dataset):
         sampled from the client with index `idx`.
         """
         feature_arrays = self.data[idx]
-        return self.get_splits(feature_arrays), feature_arrays[self.col_client_id]
-
+        client_id = idx if self.col_client_id is None else feature_arrays[self.col_client_id]
+        return self.get_splits(feature_arrays), client_id
+    
     def __iter__(self):
-        for feature_arrays in self.data:
-            yield self.get_splits(feature_arrays), feature_arrays[self.col_client_id]
+        for idx, feature_arrays in enumerate(self.data):
+            client_id = idx if self.col_client_id is None else feature_arrays[self.col_client_id]
+            yield self.get_splits(feature_arrays), client_id
 
     def get_splits(self, feature_arrays):
         """
