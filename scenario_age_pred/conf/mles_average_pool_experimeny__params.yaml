@@ -5,9 +5,9 @@ defaults:
   - inference/seq_encoder/pretrained
 
 seed_everything: 42
-logger_name: mles_model
-model_path: models/mles_model.p
-embed_file_name: mles_embeddings
+logger_name: coles_avg_pool_model
+model_path: models/coles_avg_pool_model.p
+embed_file_name: coles_avg_pool_embeddings
 
 data_module:
   _target_: ptls.frames.PtlsDataModule
