@@ -18,4 +18,4 @@ python -m pl_train_module \
 python -m ptls.pl_inference    \
     model_path="models/mles_model2.p" \
     embed_file_name="mles2_embeddings" \
-    --config-dir conf --config-name mles_params__for_check
+    --config-dir conf --config-name mles_params

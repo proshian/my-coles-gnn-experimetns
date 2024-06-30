@@ -9,9 +9,9 @@
 
 
 # Usage:
-#   sh bin/run-all-new.sh --action-on-exist delete
-#   sh bin/run-all-new.sh --action-on-exist keep
-#   sh bin/run-all-new.sh --action-on-exist raise
+#   sh bin/run-all-scenarios --action-on-exist delete
+#   sh bin/run-all-scenarios --action-on-exist keep
+#   sh bin/run-all-scenarios --action-on-exist raise
 
 
 
@@ -48,7 +48,7 @@ check_and_handle_folder() {
 action_on_exist="raise"
 
 # Parse command-line arguments
-while [[ "$#" -gt 0 ]]; do
+while [ "$#" -gt 0 ]; do
     case $1 in
         --action-on-exist)
             action_on_exist="$2"
