@@ -55,6 +55,20 @@ class ColesDataset(FeatureDict, torch.utils.data.Dataset):
 
     def __len__(self):
         return len(self.data)
+    
+    def _get_client_id_from_feature_arrays(self, feature_arrays) -> int:
+        client_id = feature_arrays[self.col_client_id]
+        if type(client_id) is int:
+            return client_id
+        if type(client_id) is str:
+            if not client_id.isdigit():
+                raise ValueError("client_id is a string and doesn't represent an integer")
+            client_id = int(client_id)
+            return client_id
+        raise ValueError(f"client_id is of an unexpected type `{type(client_id)}`")
+    
+    def _get_client_id(self, idx, feature_arrays) -> int:
+        return idx if self.col_client_id is None else self._get_client_id_from_feature_arrays(feature_arrays)
 
     def __getitem__(self, idx) -> Tuple[SplitsType, int]:
         """
@@ -62,12 +76,13 @@ class ColesDataset(FeatureDict, torch.utils.data.Dataset):
         sampled from the client with index `idx`.
         """
         feature_arrays = self.data[idx]
-        client_id = idx if self.col_client_id is None else feature_arrays[self.col_client_id]
+        client_id = self._get_client_id(idx, feature_arrays)
+           
         return self.get_splits(feature_arrays), client_id
     
     def __iter__(self):
         for idx, feature_arrays in enumerate(self.data):
-            client_id = idx if self.col_client_id is None else feature_arrays[self.col_client_id]
+            client_id = self._get_client_id(idx, feature_arrays)
             yield self.get_splits(feature_arrays), client_id
 
     def get_splits(self, feature_arrays):
@@ -90,7 +105,7 @@ class ColesDataset(FeatureDict, torch.utils.data.Dataset):
         
         # !!!! client_ids is a tuple of strings insted of integers!!!! Check why
         # Repeat each id `split_count` times to match batch_seqs.
-        client_ids = [int(client_id) for client_id in client_ids for _ in range(split_count)]
+        client_ids = [client_id for client_id in client_ids for _ in range(split_count)]
         
         # Flatten `List[List[Dict[str, np.ndarray]]]` to `List[Dict[str, np.ndarray]]`.
         batch_seqs = reduce(iadd, batch_seqs)
