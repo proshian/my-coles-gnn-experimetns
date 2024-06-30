@@ -82,8 +82,11 @@ echo "==== Device cuda:${CUDA_VISIBLE_DEVICES} will be used"
 echo ""
 echo "==== Start"
 
+echo "==== Scenario: COLEs"
 sh bin/scenario_coles.sh
+echo "==== Scenario: COLEs with avg pool + linear as seq encoder"
 sh bin/scenario_coles_with_avg_pool.sh
+echo "==== Scenario: COLEs with GNN"
 sh bin/scenario_coles_gnn__for_check.sh
 
 

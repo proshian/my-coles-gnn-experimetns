@@ -9,9 +9,9 @@
 
 
 # Usage:
-#   sh bin/run-all-new.sh --action-on-exist delete
-#   sh bin/run-all-new.sh --action-on-exist keep
-#   sh bin/run-all-new.sh --action-on-exist raise
+#   sh bin/run-all-scenarios --action-on-exist delete
+#   sh bin/run-all-scenarios --action-on-exist keep
+#   sh bin/run-all-scenarios --action-on-exist raise
 
 
 
@@ -48,7 +48,7 @@ check_and_handle_folder() {
 action_on_exist="raise"
 
 # Parse command-line arguments
-while [[ "$#" -gt 0 ]]; do
+while [ "$#" -gt 0 ]; do
     case $1 in
         --action-on-exist)
             action_on_exist="$2"
@@ -82,8 +82,11 @@ echo "==== Device cuda:${CUDA_VISIBLE_DEVICES} will be used"
 echo ""
 echo "==== Start"
 
+echo "==== Scenario: COLEs"
 sh bin/scenario_coles.sh
+echo "==== Scenario: COLEs with avg pool + linear as seq encoder"
 sh bin/scenario_coles_with_avg_pool.sh
+echo "==== Scenario: COLEs with GNN"
 sh bin/scenario_coles_gnn__for_check.sh
 
 
