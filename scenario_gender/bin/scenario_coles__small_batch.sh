@@ -12,7 +12,7 @@ python -m ptls.pl_train_module \
     data_module.train_num_workers=4 \
     data_module.valid_batch_size=128 \
     data_module.valid_num_workers=4 \
-    # trainer.max_epochs=1 \
+    # trainer.max_epochs=1 
 
 
 # ! For some resaon even batch_size 50 takes over 2 Gb on inference  !

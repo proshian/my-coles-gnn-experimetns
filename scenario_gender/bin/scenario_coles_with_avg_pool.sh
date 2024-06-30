@@ -11,7 +11,7 @@ PYTHONPATH=.. python -m ptls.pl_train_module \
     pl_module.lr_scheduler_partial.step_size=60 \
     model_path="models/coles_avg_pool_model_2.p" \
     logger_name="coles_avg_pool_model_2"  \
-    # trainer.max_epochs=1 \
+    # trainer.max_epochs=1 
 
 
 PYTHONPATH=.. python -m ptls.pl_inference    \
