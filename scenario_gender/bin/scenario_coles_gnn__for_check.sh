@@ -20,4 +20,4 @@ PYTHONPATH=.. python -m ptls.pl_train_module \
 PYTHONPATH=.. python -m ptls.pl_inference    \
     model_path="models/mles_model2.p" \
     embed_file_name="mles2_embeddings" \
-    --config-dir conf --config-name coles_gnn_params__for_check.yaml
+    --config-dir conf --config-name coles_gnn_params.yaml
