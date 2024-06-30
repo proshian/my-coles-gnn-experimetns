@@ -1,5 +1,4 @@
 # Check COLEs with split_count=2
-# was 0.637
 # python -m ptls.pl_train_module \
 python -m ptls.pl_train_module \
     --config-dir conf --config-name mles_params \

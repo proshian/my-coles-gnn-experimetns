@@ -9,7 +9,7 @@ python -m ptls.pl_train_module \
     pl_module.lr_scheduler_partial.step_size=60 \
     model_path="models/mles_model2.p" \
     logger_name="mles_model2" \
-    # trainer.max_epochs=300 \
+    # trainer.max_epochs=300 
 
 
 python -m ptls.pl_inference    \

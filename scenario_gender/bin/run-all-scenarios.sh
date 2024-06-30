@@ -30,7 +30,7 @@ check_and_handle_folder() {
                 rm -rf "$folder_path"
                 ;;
             raise)
-                echo "Folder already exists: $folder_path. Delete it and restart the script or change the action to keep or delete."
+                echo "Folder already exists: $folder_path. Delete it and rerun the script with option \`--action-on-exist keep\` or \`--action-on-exist delete\`."
                 exit 1
                 ;;
             keep)
@@ -97,4 +97,4 @@ sh bin/scenario_coles_gnn__for_check.sh
 rm results/scenario_gender_baselines_unsupervised.txt
 # rm -r conf/embeddings_validation.work/
 python -m embeddings_validation \
-    --config-dir conf --config-name embeddings_validation__2024_research +workers=10 +total_cpu_count=20
+    --config-dir conf --config-name embeddings_validation__2024_research +workers=10 +total_cpu_count=4
