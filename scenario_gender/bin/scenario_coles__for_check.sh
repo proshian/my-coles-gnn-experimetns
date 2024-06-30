@@ -10,9 +10,9 @@ python -m ptls.pl_train_module \
     pl_module.lr_scheduler_partial.step_size=60 \
     model_path="models/mles_model2.p" \
     logger_name="mles_model2" \
-    data_module.train_batch_size=32 \
+    data_module.train_batch_size=80 \
     data_module.train_num_workers=4 \
-    data_module.valid_batch_size=48 \
+    data_module.valid_batch_size=128 \
     data_module.valid_num_workers=4
     
 python -m ptls.pl_inference    \
