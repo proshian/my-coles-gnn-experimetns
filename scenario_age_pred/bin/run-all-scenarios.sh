@@ -30,7 +30,7 @@ check_and_handle_folder() {
                 rm -rf "$folder_path"
                 ;;
             raise)
-                echo "Folder already exists: $folder_path. Delete it and restart the script or change the action to keep or delete."
+                echo "Folder already exists: $folder_path. Delete it and rerun the script with option \`--action-on-exist keep\` or \`--action-on-exist delete\`."
                 exit 1
                 ;;
             keep)
@@ -83,7 +83,9 @@ echo ""
 echo "==== Start"
 
 echo "==== Scenario: COLEs"
-sh bin/scenario_coles.sh
+# sh bin/scenario_coles__for_check.sh
+# sh bin/scenario_coles.sh
+sh bin/scenario_coles__small_batch.sh
 echo "==== Scenario: COLEs with avg pool + linear as seq encoder"
 sh bin/scenario_coles_with_avg_pool.sh
 echo "==== Scenario: COLEs with GNN"
@@ -91,8 +93,9 @@ sh bin/scenario_coles_gnn__for_check.sh
 
 
 
-# # Compare
-rm results/scenario_age_pred.txt
+# Compare
+rm results/scenario_gender_baselines_unsupervised.txt
 # rm -r conf/embeddings_validation.work/
 python -m embeddings_validation \
-    --config-dir conf --config-name embeddings_validation_baselines_supervised +workers=10 +total_cpu_count=20
+    --config-dir conf --config-name embeddings_validation__2024_research +workers=10 +total_cpu_count=4
+    
