@@ -83,6 +83,7 @@ echo ""
 echo "==== Start"
 
 echo "==== Scenario: COLEs"
+# sh bin/scenario_coles__for_check.sh
 sh bin/scenario_coles.sh
 echo "==== Scenario: COLEs with avg pool + linear as seq encoder"
 sh bin/scenario_coles_with_avg_pool.sh
