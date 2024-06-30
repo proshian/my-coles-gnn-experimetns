@@ -1,8 +1,4 @@
-defaults:
-  - override hydra/hydra_logging: none
-  - override hydra/job_logging: none
-
-conf_path: conf/embeddings_validation_baselines_supervised.yaml
+conf_path: conf/embeddings_validation_baselines_unsupervised.yaml
 environment: 
   work_dir: embeddings_validation.work
 target: 
@@ -78,14 +74,19 @@ metrics:
     score_func: sklearn.metrics.accuracy_score
     scorer_params: 
       needs_proba: false
-report_file: ${hydra:runtime.cwd}/results/scenario_gender_baselines_supervised.txt
-features: {}
-external_scores: 
-  fit_target: ${hydra:runtime.cwd}/results/fit_target_results.json
-  mles_finetuning: ${hydra:runtime.cwd}/results/mles_finetuning_results.json
-  cpc_finetuning: ${hydra:runtime.cwd}/results/cpc_finetuning_results.json
-  rtd_finetuning: ${hydra:runtime.cwd}/results/rtd_finetuning_results.json
-  barlow_twins_finetuning: ${hydra:runtime.cwd}/results/barlow_twins_finetuning_results.json
+report_file: ${hydra:runtime.cwd}/results/scenario_gender_2024_research.txt
+features: 
+  coles_avg_pool: 
+    enabled: true
+    read_params: 
+      file_name: ${hydra:runtime.cwd}/data/coles_avg_pool_model_embeddings.pickle
+    target_options: {}
+  coles: 
+    enabled: true
+    read_params: 
+      file_name: ${hydra:runtime.cwd}/data/mles_model_small_batch_2_embeddings.pickle
+    target_options: {}
+external_scores: {}
 report: 
   is_check_train: false
   error_handling: fail
@@ -94,6 +95,12 @@ report:
     auroc: 
       float_format: "{:.3f}"
       baseline_key: 
-        - nn
-        - target_scores
+        - lgbm
+        - coles
+      split_columns: true
+    accuracy: 
+      float_format: "{:.3f}"
+      baseline_key: 
+        - lgbm
+        - coles
       split_columns: true

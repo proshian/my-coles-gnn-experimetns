@@ -93,8 +93,8 @@ sh bin/scenario_coles_gnn__for_check.sh
 
 
 
-# # Compare
-rm results/scenario_age_pred.txt
+# Compare
+rm results/scenario_gender_baselines_unsupervised.txt
 # rm -r conf/embeddings_validation.work/
 python -m embeddings_validation \
-    --config-dir conf --config-name embeddings_validation_baselines_supervised +workers=10 +total_cpu_count=20
+    --config-dir conf --config-name embeddings_validation__2024_research +workers=10 +total_cpu_count=20
