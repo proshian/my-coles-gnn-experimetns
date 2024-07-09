@@ -1,7 +1,7 @@
 # Check COLEs with split_count=2
 # python -m ptls.pl_train_module \
 python -m ptls.pl_train_module \
-    --config-dir conf --config-name mles_params \
+    --config-dir conf --config-name mles_params_iterable \
     data_module.train_data.splitter.split_count=2 \
     data_module.valid_data.splitter.split_count=2 \
     pl_module.validation_metric.K=1 \
@@ -20,5 +20,5 @@ python -m ptls.pl_inference    \
     model_path="models/mles_model_small_batch_2.p" \
     embed_file_name="mles_model_small_batch_2_embeddings" \
     inference.batch_size=30 \
-    --config-dir conf --config-name mles_params 
+    --config-dir conf --config-name mles_params_iterable 
     

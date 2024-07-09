@@ -12,7 +12,7 @@ embed_file_name: mles_embeddings
 data_module:
   _target_: ptls.frames.PtlsDataModule
   train_data:
-    _target_: ptls.frames.coles.ColesDataset
+    _target_: ptls.frames.coles.ColesIterableDataset
     splitter:
       _target_: ptls.frames.coles.split_strategy.SampleSlices
       split_count: 5
@@ -20,7 +20,7 @@ data_module:
       cnt_max: 200
     data: ${dataset_unsupervised.train}
   valid_data:
-    _target_: ptls.frames.coles.ColesDataset
+    _target_: ptls.frames.coles.ColesIterableDataset
     splitter:
       _target_: ptls.frames.coles.split_strategy.SampleSlices
       split_count: 5
