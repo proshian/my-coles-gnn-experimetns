@@ -55,12 +55,16 @@ class DatasetConverter:
         parser.add_argument('--sample_fraction', type=float, default=None)
         parser.add_argument('--col_client_id', type=str)
         parser.add_argument('--cols_event_time', nargs='+', 
-                            help='Two arguments: 1) type of time transformation ' \
+                            help='Usually two arguments: 1) type of time transformation ' \
                                  '2) time column name.\n' \
                                  'Possible time transformation types: ' \
                                  '"#float", "#datetime", "#gender"')
 
-        parser.add_argument('--dict', nargs='*', default=[])
+        parser.add_argument('--dict', nargs='*', default=[],
+                            help = 'Specifies additional files with features and '
+                                   'and column IDs that corresponding dataframes should' \
+                                   'be joined on with the main dataset. \n' \
+                                    'Format: `file_name_1` `column_name_1` ... `file_name_n` `column_name_n`')
         parser.add_argument('--cols_category', nargs='*', default=[],
                             help = 'List of categorical columns. All categorical ' \
                                    'features are encoded with embedding indexes. ' \
@@ -72,6 +76,9 @@ class DatasetConverter:
         parser.add_argument('--cols_log_norm', nargs='*', default=[],
                             help='List of columns to apply log transformation to. ' \
                                  'Log transformation is applied as signum(x) * log(|x| + 1)')
+        parser.add_argument('--cols_no_transform', nargs='*', default=[],
+                            help='List of columns that should be included as is without '
+                                 'any transformations apllied.')
         parser.add_argument('--col_target', nargs='*', default=[])
         parser.add_argument('--test_size', default='0.1')
         parser.add_argument('--salt', type=int, default=42,
@@ -340,8 +347,14 @@ class DatasetConverter:
             logger.info(f'Trx count per clients:\nlen(trx_list) | client_count\n{self.pd_hist(df, "trx_count")}')
 
         # column filter
+        allowed_cols = (
+            cols_category 
+            + cols_log_norm 
+            + self.config.cols_no_transform 
+            + ['event_time', col_client_id]
+        )
         used_columns = [col for col in df_data.columns
-                        if col in cols_category + cols_log_norm + ['event_time', col_client_id]]
+                        if col in allowed_cols]
 
         logger.info('Feature collection in progress ...')
         features = df_data.select(used_columns)
