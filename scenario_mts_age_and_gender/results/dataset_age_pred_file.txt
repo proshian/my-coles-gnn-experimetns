@@ -10,4 +10,4 @@ split_dataset          : Train size: 388317 clients
 split_dataset          : Test size: 27000 clients
 save_features          : Saved to: "/home/proshian/Documents/my-coles-gnn-experimetns/scenario_mts_age_and_gender/data/train_trx_file.parquet"
 save_features          : Saved to: "/home/proshian/Documents/my-coles-gnn-experimetns/scenario_mts_age_and_gender/data/test_trx_file.parquet"
-run                    : Data collected in 1917 sec (0:31:57.408441)
+run                    : Data collected in 2072 sec (0:34:32.738322)

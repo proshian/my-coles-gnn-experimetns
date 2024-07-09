@@ -79,6 +79,8 @@ class DatasetConverter:
         parser.add_argument('--cols_no_transform', nargs='*', default=[],
                             help='List of columns that should be included as is without '
                                  'any transformations apllied.')
+        parser.add_argument('--cols_to_float', nargs='*', default=[],
+                            help='List of columns that should be converted to float.')
         parser.add_argument('--col_target', nargs='*', default=[])
         parser.add_argument('--test_size', default='0.1')
         parser.add_argument('--salt', type=int, default=42,
@@ -346,10 +348,14 @@ class DatasetConverter:
             df = df_data.groupby(col_client_id).agg(F.count(F.lit(1)).alias("trx_count"))
             logger.info(f'Trx count per clients:\nlen(trx_list) | client_count\n{self.pd_hist(df, "trx_count")}')
 
+        for col in self.config.cols_to_float:
+            df_data = df_data.withColumn(col, F.col(col).astype('float'))
+
         # column filter
         allowed_cols = (
             cols_category 
             + cols_log_norm 
+            + self.config.cols_to_float
             + self.config.cols_no_transform 
             + ['event_time', col_client_id]
         )

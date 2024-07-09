@@ -16,8 +16,9 @@ SPARK_LOCAL_IP="127.0.0.1" spark-submit \
     --cols_event_time "#mts" "date" "part_of_day" \
     --cols_category "region_name" "city_name" "cpe_model_name" "cpe_manufacturer_name" "part_of_day" "cpe_type_cd" "cpe_model_os_type" \
     --cols_log_norm "price" \
+    --cols_to_float "request_cnt" \
     --target_files public_train.parquet \
-    --col_target is_male \
+    --col_target "is_male" "age" \
     --test_size 0.1 \
     --output_train_path "data/train_trx_file.parquet" \
     --output_test_path "data/test_trx_file.parquet" \

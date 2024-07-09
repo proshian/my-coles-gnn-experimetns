@@ -9,13 +9,14 @@
 
 1. Подготовка датасета
     1. Добавить `request_cnt`
+        * Скорее всего, нужно добавить to_float
         * Число запросов одного пользователя за время дня (поле part_of_day)
         * Как принято обрабатывать авторами: в ptls.preprocessing из коробки есть два варианта: log_norm и identity_tranasform
         * request_cnt - это числа от 1 до 16 
         * Как нормализовали в google 2015? 
     2. Добаить `url_host`
-    3. Добавить 2 таргета
 2. Обучение 
+    * Датасет весит больше 16 гб => для локального запуска нужно использовать iterable датасет
 
 ---
 url_host - понять как выделять фичи
@@ -32,7 +33,28 @@ url_host - понять как выделять фичи
     * chto--proishodit-ru.turbopages.org что--проишодит-ру.турбопагес.орг
 4. Можно банально усреднить эмбеддинги по времени; можно обучить колес
 5. Можно сразу сделать pca / t-sne, чтобы посмотреть что получилось. Желательно какую-то нтервактивую верссию, чтобы виделть точки в пространсстве и при навежении было видно исхожный домен
-6. xn--22-glcqfm3bya1b.xn--p1ai - так отображаются сайты, которые исходно на русском. Это, к слову, был грузчик22.рф. Нужно научиться их преобразовывать к русскому языку
+
+
+6. xn--22-glcqfm3bya1b.xn--p1ai - так отображаются сайты, которые исходно на русском. Это, к слову, был грузчик22.рф. Такая кодировка называется punycode. Я научился декодировать ее в русский:
+
+```python
+def convert_punycode(puny_domen: str) -> str:
+    """
+    Converts punycode to unicode
+
+    Example:
+    >>> convert_punycode('xn--22-glcqfm3bya1b.xn--p1ai')
+    <<< 'грузчик22.рф'
+    """
+    return puny_domen.encode().decode('idna')
+```
+
+All punycode domains start with 'xn--' and thus are easy to detect. I suppose that resular domains won't use such prefix:
+
+```python
+def is_punycode(s: str) -> bool:
+    return s.startswith('xn--')
+```
 
 ---
 
