@@ -254,12 +254,26 @@ class DatasetConverter:
         {'day': 0.0, 'morning': 0.25, 'evening': 0.5, 'night': 0.75}
         """
         part_of_day_map = {'day': 0.0, 'morning': 0.25, 'evening': 0.5, 'night': 0.75}
-        part_of_day_map  = F.create_map([F.lit(k) for k in part_of_day_map.items()])
-        df = df.withColumn(
-            'event_time', 
-            F.unix_timestamp(F.col(col_date)) / (24 * 60 * 60) + part_of_day_map[F.col(col_part_of_day)])
-        logger.info('MTS-like time transformation')
+        
+        # Convert col_date to UNIX timestamp (seconds since epoch)
+        df = df.withColumn('_date_unix', F.unix_timestamp(F.col(col_date).cast(T.DateType())))
+
+        # Convert UNIX timestamp to days since epoch
+        df = df.withColumn('_date_days', F.col('_date_unix') / (24 * 60 * 60))
+
+        # Map col_part_of_day to its fractional value
+        part_of_day_udf = F.udf(lambda pod: part_of_day_map.get(pod, 0.0), T.FloatType())
+        df = df.withColumn('_part_of_day_fraction', part_of_day_udf(F.col(col_part_of_day)))
+
+        # Combine the days since epoch and the part of day fraction to form event_time
+        df = df.withColumn('event_time', F.col('_date_days') + F.col('_part_of_day_fraction'))
+
+        # Drop intermediate columns
+        df = df.drop('_date_unix', '_date_days', '_part_of_day_fraction')
+
+        logger.info('MTS time transformation')
         return df
+
         
 
     def remove_long_trx(self, df, max_trx_count, col_client_id):
