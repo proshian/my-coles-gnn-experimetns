@@ -1,6 +1,6 @@
 defaults:
   - _self_
-  - dataset_unsupervised/parquet_iterable
+  - dataset_unsupervised/parquet_iterable_with_url
   - inference/default
   - inference/seq_encoder/pretrained
 
@@ -72,6 +72,12 @@ pl_module:
         cpe_model_os_type:
           in: 3
           out: 8
+      custom_embeddings: 
+        url_host:
+          _target_: ptls_extension_2024_research.nn.trx_encoder.dict_encoder.DictEncoder
+          embs_dict: 
+            _target_: ptls_extension_2024_research.nn.trx_encoder.dict_encoder.unpickle_dict
+            fpath: data/url_hosts_embedings_dict__ruelectra_tyny.pkl
       numeric_values: 
         price: identity
         request_cnt: identity

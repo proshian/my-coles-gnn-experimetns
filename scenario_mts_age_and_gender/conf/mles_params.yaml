@@ -1,6 +1,6 @@
 defaults:
   - _self_
-  - dataset_unsupervised/parquet_iterable
+  - dataset_unsupervised/parquet
   - inference/default
   - inference/seq_encoder/pretrained
 
@@ -12,7 +12,7 @@ embed_file_name: mles_embeddings
 data_module:
   _target_: ptls.frames.PtlsDataModule
   train_data:
-    _target_: ptls.frames.coles.ColesIterableDataset
+    _target_: ptls.frames.coles.ColesDataset
     splitter:
       _target_: ptls.frames.coles.split_strategy.SampleSlices
       split_count: 5
@@ -20,7 +20,7 @@ data_module:
       cnt_max: 200
     data: ${dataset_unsupervised.train}
   valid_data:
-    _target_: ptls.frames.coles.ColesIterableDataset
+    _target_: ptls.frames.coles.ColesDataset
     splitter:
       _target_: ptls.frames.coles.split_strategy.SampleSlices
       split_count: 5
