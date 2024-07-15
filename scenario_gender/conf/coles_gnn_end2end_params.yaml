@@ -45,29 +45,30 @@ pl_module:
     K: 4
     metric: cosine
   gnn_pipeline:
-    model:
-      gnn_name: GraphSAGE  # GraphSAGE, GAT
-      embedding_dim: 64
-      h_dim: 32
-      n_layers: 2
-      use_weights: true
-    gnn_specific_params:
-      gat:
-        feat_drop: 0.6
-        attn_drop: 0.6
-      graphsage:
-        aggregator_type: mean
-    gnn_training_pipeline:
-      optimizer_partial:
-        _partial_: true
-        _target_: torch.optim.Adam
-        lr: 0.002
-        weight_decay: 0.0
-      lr_scheduler_partial:
-        _partial_: true
-        _target_: torch.optim.lr_scheduler.StepLR
-        step_size: 10
-        gamma: 0.9025
+
+  gnn_model:
+    gnn_name: GraphSAGE  # GraphSAGE, GAT
+    embedding_dim: 64
+    h_dim: 32
+    n_layers: 2
+    use_weights: true
+  gnn_specific_params:
+    gat:
+      feat_drop: 0.6
+      attn_drop: 0.6
+    graphsage:
+      aggregator_type: mean
+  gnn_training_pipeline:
+    optimizer_partial:
+      _partial_: true
+      _target_: torch.optim.Adam
+      lr: 0.002
+      weight_decay: 0.0
+    lr_scheduler_partial:
+      _partial_: true
+      _target_: torch.optim.lr_scheduler.StepLR
+      step_size: 10
+      gamma: 0.9025
 
   seq_encoder:
     _target_: ptls.nn.RnnSeqEncoder
