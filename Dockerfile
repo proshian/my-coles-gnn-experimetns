@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.1.0-base-ubuntu18.04
+FROM nvidia/cuda:12.1.0-base-ubuntu20.04
 
 RUN apt-get update && apt-get upgrade -y
 
