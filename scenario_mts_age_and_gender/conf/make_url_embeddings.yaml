@@ -1,0 +1,19 @@
+urls-file-path: data/urls.txt
+model-name: sberbank-ai/ruElectra-small
+batch-size: 10000
+num-workers: 4
+embedder:
+  _target_: MeanPoolSeqEmbedder
+  model-name: ${model-name}
+output-file-path: data/url_embeddings.txt
+
+parser.add_argument('--model-name', type=str, default="sberbank-ai/ruElectra-small",
+                    help = 'A name of the hugingface model to use for tokenization. ' \
+                            'Default is "ai-forever/ruBert-base"')
+parser.add_argument('--batch-size', type=int, default=10000,
+                    help = 'A batch size for the dataloader. Default is 10000')
+parser.add_argument('--num-workers', type=int, default=0,
+                    help = 'A number of workers for the dataloader. Default is 0')
+parser.add_argument
+parser.add_argument('--output-file-path', type=os.path.abspath,
+                    help = 'A path to a file where to save the results')
