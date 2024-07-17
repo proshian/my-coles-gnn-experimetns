@@ -15,30 +15,32 @@ class GraphBuilder(ABC):
     def _build_simple_edge_df(self, df, src_col, dst_col):
         pass
 
-    def build(self, df, src_col, dst_col, use_weights):
+    def build(self, df, client_col, item_col, use_weights):
         if use_weights:
-            df, src_col, dst_col, weight_col = self._build_weighted_edge_df(df, src_col, dst_col)
+            df, client_col, item_col, weight_col = self._build_weighted_edge_df(df, client_col, item_col)
         else:
-            df, src_col, dst_col = self._build_simple_edge_df(df, src_col, dst_col)
+            df, client_col, item_col = self._build_simple_edge_df(df, client_col, item_col)
             weight_col = None
 
-        g, node2index, index2node = create_graph_from_df(df, src_col, dst_col, weight_col)
-        return g, node2index, index2node
+        g, client_id2graph_id, item_id2graph_id = create_graph_from_df(df, client_col, item_col, weight_col)
+        return g, client_id2graph_id, item_id2graph_id
 
 
-def create_graph_from_df(df, src_col: str, dst_col: str, weight_col: Optional[str] = None):
+def create_graph_from_df(df, client_col: str, item_col: str, weight_col: Optional[str] = None):
     # Create a dictionary to map node names to integers
-    unique_nodes_src = df[src_col].unique()
-    unique_nodes_dst = df[dst_col].unique()
-    unique_nodes = np.concatenate([unique_nodes_src, unique_nodes_dst])
-    node_map = {node: i for i, node in enumerate(unique_nodes)}
+    unique_nodes_client = df[client_col].unique()
+    unique_nodes_item = df[item_col].unique()
 
-    # Create reverse mapping (integer to node name)
-    reverse_node_map = {i: node for node, i in node_map.items()}
+    # create index mapping
+    client_id2graph_id = torch.zeros(unique_nodes_client.max()+1)
+    client_id2graph_id[unique_nodes_client] = torch.arange(len(unique_nodes_client))
+
+    item_id2graph_id = torch.zeros(unique_nodes_item.max() + 1)
+    item_id2graph_id[unique_nodes_item] = torch.arange(len(unique_nodes_item)) + len(unique_nodes_client)
 
     # Convert source and destination columns to integer indices
-    src = torch.tensor([node_map[node] for node in df[src_col]])
-    dst = torch.tensor([node_map[node] for node in df[dst_col]])
+    src = client_id2graph_id[df[client_col].value]
+    dst = item_id2graph_id[df[item_col].value]
 
     src_bi = torch.cat([src, dst])
     dst_bi = torch.cat([dst, src])
@@ -51,7 +53,4 @@ def create_graph_from_df(df, src_col: str, dst_col: str, weight_col: Optional[st
     weights_bi = torch.cat([weights, weights])
     g.edata['weight'] = weights_bi
 
-    # Add node names as a node feature
-    #      g.ndata['name'] = torch.tensor([reverse_node_map[i] for i in range(g.num_nodes())])
-
-    return g, node_map, reverse_node_map
+    return g, client_id2graph_id, item_id2graph_id
