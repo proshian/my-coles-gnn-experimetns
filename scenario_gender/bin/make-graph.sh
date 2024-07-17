@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-python make_dataset_help_no_ptls.py \
+python make_graph.py \
 --data_path data/ \
 --trx_file transactions.csv \
 --col_client_id customer_id \
