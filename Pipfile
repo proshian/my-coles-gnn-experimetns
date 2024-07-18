@@ -8,8 +8,6 @@ name = "pytorch"
 url = "https://download.pytorch.org/whl/cu121"
 verify_ssl = false
 
-
-
 [dev-packages]
 jupyter = "*"
 
@@ -19,7 +17,7 @@ numpy = ">=1.16.4"
 pandas = ">=0.24.2"
 scikit-learn = ">=0.21.2"
 scipy = ">=1.3.0"
-torch = {index = "pytorch",version = ">=2.3.0,<2.4.0"}
+torch = {index = "pytorch",version = ">=2.2.0,<2.3.0"}
 tqdm = ">=4.32.2"
 pyspark = ">=2"
 tensorboard = ">=2.13.0"
@@ -29,7 +27,8 @@ ptls-validation = {git = "https://github.com/dllllb/ptls-validation.git", editab
 pytorch-lifestream = {editable = true, ref = "v0.6.0", git = "git+https://github.com/dllllb/pytorch-lifestream.git"}
 hydra-optuna-sweeper = '>=1.2.0'
 protobuf = "==4.25"
-dgl = {url = "https://data.dgl.ai/wheels/torch-2.3/cu121/dgl-2.3.0%2Bcu121-cp38-cp38-manylinux1_x86_64.whl"}
+dgl = {url = "https://data.dgl.ai/wheels/torch-2.2/cu121/dgl-2.2.0%2Bcu121-cp38-cp38-manylinux1_x86_64.whl"}
+pydantic = "*"
 
 [requires]
 python_version = "3.8"
