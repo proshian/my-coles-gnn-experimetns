@@ -8,7 +8,7 @@ from ptls.nn.head import Head
 from ptls.nn.seq_encoder.containers import SeqEncoderContainer
 from ptls_extension_2024_research import TrxEncoder_WithCIEmbeddings
 from ptls_extension_2024_research.nn.trx_encoder.client_item_encoder import GNNClientItemEncoder
-from ptls_extension_2024_research.frames.coles_client_id_aware.coles_module__trx_with_ci_embs import CoLESModule
+from ptls_extension_2024_research.frames.coles_client_id_aware.coles_module__trx_with_ci_embs import CoLESModule_CITrx
 from ptls_extension_2024_research.frames.gnn.gnn_module import GnnModule, ColesBatchToSubgraphConverter
 
 
@@ -28,7 +28,7 @@ class ColesGnnModule(pl.LightningModule):
         super().__init__()
 
         gnn = self.get_gnn_from_seq_encoder(seq_encoder)
-        self.coles_module = ColesGnnModule(seq_encoder, head, coles_loss, coles_validation_metric, 
+        self.coles_module = CoLESModule_CITrx(seq_encoder, head, coles_loss, coles_validation_metric, 
                                            optimizer_partial=None, lr_scheduler_partial=None)
         self.gnn_module = GnnModule(gnn, optimizer_partial=None, lr_scheduler_partial=None, 
                                     neg_items_per_pos = neg_items_per_pos, lr_criterion_name = lr_criterion_name)
@@ -50,16 +50,11 @@ class ColesGnnModule(pl.LightningModule):
     #     pass
 
     def training_step(self, batch, _):
-        opt = self.optimizers()
-        opt.zero_grad()
-
         subgraph = self.get_subgraph(batch)
         gnn_loss = self.gnn_module.training_step(subgraph, _)
         coles_loss = self.coles_module.training_step(batch, _)
-        
-        self.manual_backward(gnn_loss)
-        self.manual_backward(coles_loss)
-        opt.step()
+        full_loss = gnn_loss + coles_loss
+        return full_loss
         
 
     def validation_step(self, batch, _):
@@ -96,6 +91,10 @@ class ColesGnnModule(pl.LightningModule):
 * on_validation_epoch_end - логирует метрики, вычисленные на валидации
 * configure_optimizers - конфигурирует оптимизаторы и lr_scheduler'ы
 """
+
+
+
+
 
 
 # class ABSModule(pl.LightningModule):

@@ -23,10 +23,10 @@ from ptls_extension_2024_research.graphs.utils import MLPPredictor, construct_ne
 
 
 class ColesBatchToSubgraphConverter:
-    def __init__(self, graph_file_path, item_id2graph_id, client_id2graph_id):
+    def __init__(self, graph_file_path, item_id2graph_id_path, client_id2graph_id_path):
         self.client_item_g: ClientItemGraph = ClientItemGraph.from_graph_file(graph_file_path)
-        self.item_id2graph_id = item_id2graph_id
-        self.client_id2graph_id = client_id2graph_id
+        self.item_id2graph_id = torch.load(item_id2graph_id_path)
+        self.client_id2graph_id = torch.load(client_id2graph_id_path)
 
     def __call__(self, client_ids, item_ids):
         graph_item_ids = self.item_id2graph_id[item_ids]
