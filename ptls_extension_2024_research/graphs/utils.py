@@ -1,15 +1,31 @@
 import dgl
+import numpy as np
 import torch
 from torch import nn
 
 
-def construct_negative_graph(graph, k):
-    # TODO: won't work correct on bipartite graphs
-    src, dst = graph.edges()
+class RandEdgeSampler:
+    def __init__(self, train_graph: dgl.DGLGraph, seed=None):
+        self.seed = None
+        src, dst = train_graph.edges()
+        self.src_list = np.unique(src.numpy()).astype(int)
+        self.dst_list = np.unique(dst.numpy()).astype(int)
 
-    neg_src = src.repeat_interleave(k)
-    neg_dst = torch.randint(0, graph.num_nodes(), (len(src) * k,))
-    return dgl.graph((neg_src, neg_dst), num_nodes=graph.num_nodes())
+        if seed is not None:
+            self.seed = seed
+            self.random_state = np.random.RandomState(self.seed)
+
+    def sample(self, size):
+        if self.seed is None:
+            src_index = np.random.randint(0, len(self.src_list), size)
+            dst_index = np.random.randint(0, len(self.dst_list), size)
+        else:
+            src_index = self.random_state.randint(0, len(self.src_list), size)
+            dst_index = self.random_state.randint(0, len(self.dst_list), size)
+        return self.src_list[src_index], self.dst_list[dst_index]
+
+    def reset_random_state(self):
+        self.random_state = np.random.RandomState(self.seed)
 
 
 class MLPPredictor(nn.Module):
