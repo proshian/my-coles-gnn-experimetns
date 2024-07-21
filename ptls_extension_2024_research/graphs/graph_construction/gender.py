@@ -6,7 +6,6 @@ from ptls_extension_2024_research.graphs.graph_construction.base import GraphBui
 
 
 class GenderGraphBuilder(GraphBuilder):
-
     def preprocess(self, df):
         df['amount'] = df['amount'].apply(abs)
         return df

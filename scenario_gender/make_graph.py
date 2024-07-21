@@ -16,9 +16,6 @@ logger = logging.getLogger(__name__)
 def parse_args(args=None):
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--trx_file')
-    parser.add_argument('--use_weights', action='store_true')
-
     parser.add_argument('--data_path', type=os.path.abspath)
     parser.add_argument('--col_client_id', type=str)
     parser.add_argument('--col_item_id', type=str)
@@ -32,19 +29,14 @@ def parse_args(args=None):
     parser.add_argument('--log_file', type=os.path.abspath)
 
     args = parser.parse_args(args)
+    logger.info('Parsed args:\n' + '\n'.join([f'  {k:15}: {v}' for k, v in vars(args).items()]))
     return args
 
 
-def configure_logger(config):
-    if config.log_file is not None:
-        handlers = [logging.StreamHandler(), logging.FileHandler(config.log_file, mode='w')]
-    else:
-        handlers = None
-    logging.basicConfig(level=logging.INFO, format='%(funcName)-20s   : %(message)s', handlers=handlers)
-
-
 def preprocess_df(df_data, config):
-    df_data[config.col_item_id] = encode_col(df_data[config.col_item_id])
+    for col in config.col_item_id:
+        df_data[col] = encode_col(df_data[col])
+
     for col in config.cols_log_norm:
         df_data[col] = np.log1p(abs(df_data[col])) * np.sign(df_data[col])
         df_data[col] /= abs(df_data[col]).max()
@@ -68,8 +60,6 @@ def main_create_graph(config):
 if __name__ == '__main__':
     _start = datetime.now()
     config = parse_args()
-    configure_logger(config)
-    logger.info('Parsed args:\n' + '\n'.join([f'  {k:15}: {v}' for k, v in vars(config).items()]))
     main_create_graph(config)
     _duration = datetime.now() - _start
     logger.info(f'Data collected in {_duration.seconds} sec ({_duration})')

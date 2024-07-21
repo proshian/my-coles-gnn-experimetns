@@ -20,8 +20,10 @@ class ClientItemGraph:
         # Combine the nodes of interest with their in-neighbors and out-neighbors
         all_nodes = torch.cat([nodes_of_interest, in_neighbors, out_neighbors]).unique()
 
+        all_nodes = torch.sort(all_nodes)
+
         # Induce a subgraph with all the relevant nodes
-        subgraph = dgl.node_subgraph(g, all_nodes)
+        subgraph = dgl.node_subgraph(self.g, all_nodes)
 
         return subgraph
 
