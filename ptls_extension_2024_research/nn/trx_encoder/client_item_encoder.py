@@ -3,11 +3,11 @@ from typing import Optional
 import numpy as np
 import torch
 import torch.nn as nn
-import dgl
 
 from ptls_extension_2024_research.graphs.graph import ClientItemGraph
 from ptls_extension_2024_research.graphs.static_models.gnn import GraphSAGE, GAT
 from ptls_extension_2024_research.graphs.utils import MLPPredictor, construct_negative_graph
+from ptls_extension_2024_research.frames.gnn.gnn_module import ColesBatchToSubgraphConverter, GnnLinkPredictor
 
 
 class BaseClientItemEncoder(nn.Module):
@@ -50,8 +50,8 @@ class DummyGNNClientItemEncoder(BaseClientItemEncoder):
 
 class StaticGNNTrainableClientItemEncoder(BaseClientItemEncoder):
     def __init__(self,
-                 data_adapter,
-                 gnn_link_predictor)
+                 data_adapter: ColesBatchToSubgraphConverter,
+                 gnn_link_predictor: GnnLinkPredictor,) -> None:
         self.gnn_link_predictor = gnn_link_predictor
         self.data_adapter = data_adapter
 
@@ -60,14 +60,13 @@ class StaticGNNTrainableClientItemEncoder(BaseClientItemEncoder):
         client_ids: torch.Tensor, shape: (batch_size,)
         item_ids: torch.Tensor, shape: (batch_size, seq_len)
         """
+        g = self.data_adapter(client_ids, item_ids)
+        subgraph_node_embeddings = self.gnn_link_predictor(g)
         graph_item_ids = self.data_adapter.item_id2graph_id[item_ids]
-        graph_client_ids = self.data_adapter.client_id2graph_id[client_ids]
-        g, subgraph_node_embeddings = self.gnn_link_predictor(client_ids, item_ids)
         item_embeddings = subgraph_node_embeddings[graph_item_ids]
         item_embeddings = item_embeddings[self.data_adapter.graph_id2item_id]
         return item_embeddings
     
-
     @property
     def output_size(self):
         return self.gnn_link_predictor.__output_size

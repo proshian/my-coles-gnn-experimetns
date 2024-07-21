@@ -7,6 +7,8 @@ from ptls.nn.head import Head
 from ptls.nn.seq_encoder.containers import SeqEncoderContainer
 from ptls_extension_2024_research import TrxEncoder_WithCIEmbeddings
 from ptls_extension_2024_research.nn.trx_encoder.client_item_encoder import GNNClientItemEncoder
+from ptls_extension_2024_research.graphs.static_models.gnn import GraphSAGE, GAT
+
 
 
 import torch
@@ -20,17 +22,17 @@ from ptls_extension_2024_research.graphs.utils import MLPPredictor, construct_ne
 
 
 
-class ColesGnnIdAdapetr:
-    def __init__(self, item_id2graph_id, client_id2graph_id):
+class ColesBatchToSubgraphConverter:
+    def __init__(self, graph_file_path, item_id2graph_id, client_id2graph_id):
+        self.client_item_g: ClientItemGraph = ClientItemGraph.from_graph_file(graph_file_path)
         self.item_id2graph_id = item_id2graph_id
         self.client_id2graph_id = client_id2graph_id
 
-    def __call__(self, batch):
-        client_ids, item_ids = batch
+    def __call__(self, client_ids, item_ids):
         graph_item_ids = self.item_id2graph_id[item_ids]
         graph_client_ids = self.client_id2graph_id[client_ids]
-        return graph_client_ids, graph_item_ids
-
+        return self.client_item_g.get_subgraph(graph_item_ids, graph_client_ids)
+    
 
 
 class GnnLinkPredictor(nn.Module):
@@ -44,16 +46,9 @@ class GnnLinkPredictor(nn.Module):
                  embedding_dim: int=64,
                  train_client_embeddings: bool=True,
                  train_item_embeddings: bool=True,
-                 graph_file_path: Optional[str]=None,
-                 client_id2graph_id_path: str='',
-                 item_id2graph_id_path: str='',
-                 graph_id2client_id_path: str = '',
-                 graph_id2item_id_path: str = '',
-                 client_feats_path: Optional[str]=None,
-                 item_feats_path: Optional[str]=None,
                  link_predictor_name: str='MLP',
                  link_predictor_add_sigmoid: bool=True,
-                 gnn_name: str='graphsage',
+                 gnn_name: str='GraphSAGE',
                  **gnn_kwags):
         super().__init__()
         self.__output_size = output_size
@@ -62,17 +57,16 @@ class GnnLinkPredictor(nn.Module):
         self.train_client_embeddings = train_client_embeddings
         self.train_item_embeddings = train_item_embeddings
 
-        self.client_feats = self._init_feats(train_client_embeddings, n_users, embedding_dim, client_feats_path)
-        self.item_feats = self._init_feats(train_item_embeddings, n_items, embedding_dim, item_feats_path)
+        total_nodes = n_users + n_items
+        self.node_feats = nn.Embedding(total_nodes, embedding_dim)
+        
+        # Create views for client_feats and item_feats from node_feats
+        # self.client_feats = nn.Embedding.from_pretrained(self.node_feats.weight[:n_users], freeze=False)
+        # self.item_feats = nn.Embedding.from_pretrained(self.node_feats.weight[n_users:], freeze=False)
+
 
         self.gnn = self._init_gnn(gnn_name, in_feats=embedding_dim, h_feats=output_size, **gnn_kwags)
-        self.client_item_g: ClientItemGraph = ClientItemGraph.from_graph_file(graph_file_path)
         self.link_predictor = self._init_link_predictor(link_predictor_name, output_size, link_predictor_add_sigmoid)
-
-        self.client_id2graph_id = torch.load(client_id2graph_id_path)
-        self.item_id2graph_id = torch.load(item_id2graph_id_path)
-
-
 
     def _init_gnn(self, gnn_name, in_feats, **gnn_kwags):
         if gnn_name == 'GraphSAGE':
@@ -81,27 +75,40 @@ class GnnLinkPredictor(nn.Module):
             return GAT(in_feats=in_feats, **gnn_kwags)
         raise Exception(f'No such graph model {gnn_name}')
     
-
     def _init_link_predictor(self, link_predictor_name, output_size, link_predictor_add_sigmoid):
         if link_predictor_name == 'MLP':
             return MLPPredictor(output_size, link_predictor_add_sigmoid)
         raise Exception(f'No such link predictor {link_predictor_name}')
 
-    def _init_feats(self, train_embeddings, n_size, embedding_dim, feat_path):
-        if train_embeddings:
-            return nn.Embedding(n_size, embedding_dim)
-        if feat_path is not None:
-            return torch.load(feat_path)
-        raise Exception('Problem with feats')
+    def forward(self, subgraph):
+        subgraph_node_embeddings = self.gnn(subgraph, self.node_feats[subgraph.ndata['_ID']])
+        return subgraph_node_embeddings
     
-
-    def forward(self, batch):
-        item_ids, user_ids = batch
-        node_feats = torch.cat([self.client_feats.weight.data, self.item_feats.weight.data])
-        subgraph = self.client_item_graph.get_subgraph(item_ids, user_ids)
-        subgraph_node_embeddings = self.gnn(subgraph, node_feats[subgraph.ndata['_ID']])
-        return subgraph, subgraph_node_embeddings
-
+    def save_separate_embeddings(self, client_feats_path: str, item_feats_path: str) -> None:
+        client_feats = nn.Embedding.from_pretrained(self.node_feats.weight[:self.n_users], freeze=False)
+        item_feats = nn.Embedding.from_pretrained(self.node_feats.weight[self.n_users:], freeze=False)        
+        torch.save(client_feats.state_dict(), client_feats_path)
+        torch.save(item_feats.state_dict(), item_feats_path)
+        # logger.info(f"Client embeddings saved to {client_feats_path}")
+        # logger.info(f"Item embeddings saved to {item_feats_path}")
+    
+    @classmethod
+    def from_separate_embeddings(cls, n_users: int, n_items: int, output_size: int, embedding_dim: int, 
+                                 client_feats_path: str, item_feats_path: str, **kwargs):
+        model = cls(n_users=n_users, n_items=n_items, output_size=output_size, embedding_dim=embedding_dim, **kwargs)
+        model.client_feats.load_state_dict(torch.load(client_feats_path))
+        model.item_feats.load_state_dict(torch.load(item_feats_path))
+        
+        
+        model.node_feats = nn.Embedding.from_pretrained(
+            torch.cat((model.client_feats.weight, model.item_feats.weight), dim=0), 
+            freeze = False
+        )
+        
+        # logger.info(f"Client embeddings loaded from {client_feats_path}")
+        # logger.info(f"Item embeddings loaded from {item_feats_path}")
+        return model
+        
 
 
 
