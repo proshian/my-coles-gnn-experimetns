@@ -37,14 +37,67 @@ class DummyGNNClientItemEncoder(BaseClientItemEncoder):
         item_ids: torch.Tensor, shape: (batch_size, seq_len)
         """
         batch_size, seq_len = item_ids.size()
-        return torch.zeros(batch_size, seq_len, self.output_size, device=item_ids.device)
+        return torch.zeros(batch_size, seq_len, self.__output_size, device=item_ids.device)
 
     @property
     def output_size(self):
         return self.__output_size
 
 
+
+
+
+
 class StaticGNNTrainableClientItemEncoder(BaseClientItemEncoder):
+    def __init__(self,
+                 data_adapter,
+                 gnn_link_predictor)
+        self.gnn_link_predictor = gnn_link_predictor
+        self.data_adapter = data_adapter
+
+    def forward(self, client_ids: torch.Tensor, item_ids: torch.Tensor):
+        """
+        client_ids: torch.Tensor, shape: (batch_size,)
+        item_ids: torch.Tensor, shape: (batch_size, seq_len)
+        """
+        graph_item_ids = self.data_adapter.item_id2graph_id[item_ids]
+        graph_client_ids = self.data_adapter.client_id2graph_id[client_ids]
+        g, subgraph_node_embeddings = self.gnn_link_predictor(client_ids, item_ids)
+        item_embeddings = subgraph_node_embeddings[graph_item_ids]
+        item_embeddings = item_embeddings[self.data_adapter.graph_id2item_id]
+        return item_embeddings
+    
+
+    @property
+    def output_size(self):
+        return self.gnn_link_predictor.__output_size
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class OLD_StaticGNNTrainableClientItemEncoder(BaseClientItemEncoder):
     def __init__(self,
                  n_users: int,
                  n_items: int,
