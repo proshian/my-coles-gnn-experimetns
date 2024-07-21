@@ -6,12 +6,10 @@ from ptls_extension_2024_research.graphs.graph_construction.base import GraphBui
 
 
 class GenderGraphBuilder(GraphBuilder):
-
     def preprocess(self, df):
         df['amount'] = df.amount.apply(abs)
         return df
 
-    @abstractmethod
     def _build_weighted_edge_df(self, df, client_col, item_col):
         # df = df[[client_col, item_col, 'amount']].copy()
         df = df[[client_col, item_col, 'amount']]
@@ -39,6 +37,5 @@ class GenderGraphBuilder(GraphBuilder):
         assert all(df_merged['weight'] != 0)
         return df_merged, client_col, item_col, 'weight'
 
-    @abstractmethod
     def _build_simple_edge_df(self, df, client_col, item_col):
         return df.drop_duplicates([client_col, item_col]), client_col, item_col

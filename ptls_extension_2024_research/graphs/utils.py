@@ -32,3 +32,18 @@ class MLPPredictor(nn.Module):
             if not self.add_sigmoid:
                 return g.edata['score']
             return g.edata['score'].sigmoid()
+
+
+def create_subgraph_with_all_neighbors(graph: dgl.DGLGraph, node_ids: torch.Tensor):
+    # Find all neighbors by using the predecessors and successors
+    in_neighbors = graph.in_edges(node_ids)[0].unique()
+    out_neighbors = graph.out_edges(node_ids)[1].unique()
+
+    # Combine the nodes of interest with their in-neighbors and out-neighbors
+    all_nodes = torch.cat([node_ids, in_neighbors, out_neighbors]).unique()
+    all_nodes, _ = torch.sort(all_nodes)
+
+
+    # Induce a subgraph with all the relevant nodes
+    subgraph = dgl.node_subgraph(graph, nodes=all_nodes)
+    return subgraph
