@@ -1,23 +1,10 @@
 import pytorch_lightning as pl
-from ptls.frames.abs_module import ABSModule
-from ptls.frames.coles.losses import ContrastiveLoss
-from ptls.frames.coles.metric import BatchRecallTopK
-from ptls.frames.coles.sampling_strategies import HardNegativePairSelector
-from ptls.nn.head import Head
-from ptls.nn.seq_encoder.containers import SeqEncoderContainer
-from ptls_extension_2024_research import TrxEncoder_WithCIEmbeddings
-from ptls_extension_2024_research.nn.trx_encoder.client_item_encoder import GNNClientItemEncoder
-from ptls_extension_2024_research.graphs.static_models.gnn import GraphSAGE, GAT
-
-
-
 import torch
 import torch.nn as nn
-import pytorch_lightning as pl
-from typing import Optional
 
 from ptls_extension_2024_research.graphs.graph import ClientItemGraph
 from ptls_extension_2024_research.graphs.utils import MLPPredictor, construct_negative_graph
+from ptls_extension_2024_research.graphs.static_models.gnn import GraphSAGE, GAT
 
 
 
@@ -31,7 +18,25 @@ class ColesBatchToSubgraphConverter:
     def __call__(self, client_ids, item_ids):
         graph_item_ids = self.item_id2graph_id[item_ids]
         graph_client_ids = self.client_id2graph_id[client_ids]
-        return self.client_item_g.get_subgraph(graph_item_ids, graph_client_ids)
+        subgraph = self.client_item_g.get_subgraph(graph_item_ids, graph_client_ids)
+        subgraph_ids_to_graph_ids = subgraph.ndata['_ID']
+
+        graph_ids_to_subgraph_ids = {graph_id: subgraph_id for subgraph_id, graph_id in enumerate(subgraph_ids_to_graph_ids)}
+
+        coles_item_ids2subgraph_item_ids = [graph_ids_to_subgraph_ids[graph_item_id] 
+                                            for graph_item_id 
+                                            in self.item_id2graph_id]
+        
+        coles_item_ids2subgraph_item_ids = torch.LongTensor(coles_item_ids2subgraph_item_ids, 
+                                                            device=item_ids.device, requires_grad=False)
+        
+        result = {
+            'subgraph': subgraph,
+            'coles_item_ids2subgraph_item_ids': coles_item_ids2subgraph_item_ids
+        }
+
+        return result
+
     
 
 

@@ -60,11 +60,10 @@ class StaticGNNTrainableClientItemEncoder(BaseClientItemEncoder):
         client_ids: torch.Tensor, shape: (batch_size,)
         item_ids: torch.Tensor, shape: (batch_size, seq_len)
         """
-        subgraph = self.data_adapter(client_ids, item_ids)
+        data_adapter_result = self.data_adapter(client_ids, item_ids)
+        subgraph, coles_item_ids2subgraph_item_ids = data_adapter_result['subgraph'], data_adapter_result['coles_item_ids2subgraph_item_ids']
         subgraph_node_embeddings = self.gnn_link_predictor(subgraph)
-        graph_item_ids = self.data_adapter.item_id2graph_id[item_ids]
-        item_embeddings = subgraph_node_embeddings[graph_item_ids]
-        item_embeddings = item_embeddings[self.data_adapter.graph_id2item_id]
+        item_embeddings = subgraph_node_embeddings[coles_item_ids2subgraph_item_ids] # []
         return item_embeddings
     
     @property
@@ -159,6 +158,9 @@ class StaticGNNTrainableClientItemEncoder(BaseClientItemEncoder):
 #         raise Exception('Problem with feats')
 
 #     def get_node_embeddings(self, client_ids: torch.Tensor, item_ids: torch.Tensor, calc_loss):
+#         """
+#         client_ids и item_ids - графовые id, а не coles'овые
+#         """
 #         if self.train_user_embeddings:
 #             user_feats = self.user_embeddings.weight.data
 #         else:
@@ -168,6 +170,8 @@ class StaticGNNTrainableClientItemEncoder(BaseClientItemEncoder):
 #         else:
 #             item_feats = self.item_feats
 #         assert user_feats is not None and item_feats is not None
+
+
 #         node_feats = torch.cat([user_feats, item_feats])
 #         subgraph = self.client_item_g.create_subgraph(client_ids, item_ids)
 #         subgraph_node_embeddings = self.gnn(subgraph, node_feats[subgraph.ndata['_ID']])
