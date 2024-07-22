@@ -28,19 +28,20 @@ class GraphBuilder(ABC):
 
 def create_graph_from_df(df, client_col: str, item_col: str, weight_col: Optional[str] = None):
     # Create a dictionary to map node names to integers
-    unique_nodes_client = df[client_col].unique()
-    unique_nodes_item = df[item_col].unique()
+    unique_nodes_client = df[client_col].unique().astype(int)
+    unique_nodes_item = df[item_col].unique().astype(int)
 
     # create index mapping
-    client_id2graph_id = torch.zeros(unique_nodes_client.max()+1)
+    client_id2graph_id = torch.zeros(unique_nodes_client.max()+1, dtype=torch.long)
     client_id2graph_id[unique_nodes_client] = torch.arange(len(unique_nodes_client))
 
-    item_id2graph_id = torch.zeros(unique_nodes_item.max() + 1)
+    # items always follow user index
+    item_id2graph_id = torch.zeros(unique_nodes_item.max() + 1, dtype=torch.long)
     item_id2graph_id[unique_nodes_item] = torch.arange(len(unique_nodes_item)) + len(unique_nodes_client)
 
     # Convert source and destination columns to integer indices
-    src = client_id2graph_id[df[client_col].value]
-    dst = item_id2graph_id[df[item_col].value]
+    src = client_id2graph_id[df[client_col].values]
+    dst = item_id2graph_id[df[item_col].values]
 
     src_bi = torch.cat([src, dst])
     dst_bi = torch.cat([dst, src])
