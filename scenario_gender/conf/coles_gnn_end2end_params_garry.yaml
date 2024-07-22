@@ -77,16 +77,15 @@ pl_module:
             _target_: ptls_extension_2024_research.frames.gnn.gnn_module.GnnLinkPredictor
             n_users: FILLME!!!!!!!!!!
             n_items: FILLME!!!!!!!!!!
-            output_size: FILLME!!!!!!!!!!
+            output_size: 10
             embedding_dim: 64
             train_client_embeddings: True
             train_item_embeddings: True
             link_predictor_name: MLP,
             link_predictor_add_sigmoid: True
             gnn_name: GraphSAGE
-            # gnn_kwargs:
-            FILLME!!!!!!!!!! (gnn_kwargs)
-
+            gnn_kwargs:
+              num_layers: 1
     type: gru
     hidden_size: 1024
     bidir: false

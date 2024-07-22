@@ -58,8 +58,12 @@ class GnnLinkPredictor(nn.Module):
                  link_predictor_name: str='MLP',
                  link_predictor_add_sigmoid: bool=True,
                  gnn_name: str='GraphSAGE',
-                 **gnn_kwags):
+                 gnn_kwags_dict = None):
         super().__init__()
+
+        if gnn_kwags is None:
+            gnn_kwags = {}
+
         self.__output_size = output_size
         self.n_users = n_users
         self.n_items = n_items
@@ -74,14 +78,14 @@ class GnnLinkPredictor(nn.Module):
         # self.item_feats = nn.Embedding.from_pretrained(self.node_feats.weight[n_users:], freeze=False)
 
 
-        self.gnn = self._init_gnn(gnn_name, in_feats=embedding_dim, h_feats=output_size, **gnn_kwags)
+        self.gnn = self._init_gnn(gnn_name, in_feats=embedding_dim, h_feats=output_size, **gnn_kwags_dict)
         self.link_predictor = self._init_link_predictor(link_predictor_name, output_size, link_predictor_add_sigmoid)
 
-    def _init_gnn(self, gnn_name, in_feats, **gnn_kwags):
+    def _init_gnn(self, gnn_name, in_feats, h_feats, **gnn_kwags):
         if gnn_name == 'GraphSAGE':
-            return GraphSAGE(in_feats=in_feats, **gnn_kwags)
+            return GraphSAGE(in_feats=in_feats, h_feats=h_feats, **gnn_kwags)
         if gnn_name == 'GAT':
-            return GAT(in_feats=in_feats, **gnn_kwags)
+            return GAT(in_feats=in_feats, h_feats=h_feats, **gnn_kwags)
         raise Exception(f'No such graph model {gnn_name}')
     
     def _init_link_predictor(self, link_predictor_name, output_size, link_predictor_add_sigmoid):
