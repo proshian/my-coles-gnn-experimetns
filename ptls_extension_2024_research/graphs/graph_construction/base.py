@@ -50,8 +50,9 @@ def create_graph_from_df(df, client_col: str, item_col: str, weight_col: Optiona
     g = dgl.graph((src_bi, dst_bi))
 
     # Add edge weights
-    weights = torch.tensor(df[weight_col].values, dtype=torch.float32)
-    weights_bi = torch.cat([weights, weights])
-    g.edata['weight'] = weights_bi
+    if weight_col is not None:
+        weights = torch.tensor(df[weight_col].values, dtype=torch.float32)
+        weights_bi = torch.cat([weights, weights])
+        g.edata['weight'] = weights_bi
 
     return g, client_id2graph_id, item_id2graph_id
