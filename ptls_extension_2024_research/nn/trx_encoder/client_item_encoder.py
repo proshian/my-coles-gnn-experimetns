@@ -54,6 +54,7 @@ class StaticGNNTrainableClientItemEncoder(BaseClientItemEncoder):
                  gnn_link_predictor: GnnLinkPredictor,) -> None:
         self.gnn_link_predictor = gnn_link_predictor
         self.data_adapter = data_adapter
+        self.gnn_link_predictor = self.data_adapter.neg_edge_sampler
 
     def forward(self, client_ids: torch.Tensor, item_ids: torch.Tensor):
         """
@@ -61,7 +62,9 @@ class StaticGNNTrainableClientItemEncoder(BaseClientItemEncoder):
         item_ids: torch.Tensor, shape: (batch_size, seq_len)
         """
         data_adapter_result = self.data_adapter(client_ids, item_ids)
-        subgraph, coles_item_ids2subgraph_item_ids = data_adapter_result['subgraph'], data_adapter_result['coles_item_ids2subgraph_item_ids']
+        subgraph, coles_item_ids2subgraph_item_ids =\
+            (data_adapter_result['subgraph'],
+             data_adapter_result['coles_item_ids2subgraph_item_ids'])
         subgraph_node_embeddings = self.gnn_link_predictor(subgraph)
         item_embeddings = subgraph_node_embeddings[coles_item_ids2subgraph_item_ids] # []
         return item_embeddings

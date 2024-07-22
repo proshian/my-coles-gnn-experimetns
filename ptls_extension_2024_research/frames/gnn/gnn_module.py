@@ -3,17 +3,21 @@ import torch
 import torch.nn as nn
 
 from ptls_extension_2024_research.graphs.graph import ClientItemGraph
-from ptls_extension_2024_research.graphs.utils import MLPPredictor, construct_negative_graph
+from ptls_extension_2024_research.graphs.utils import MLPPredictor, construct_negative_graph, RandEdgeSampler
 from ptls_extension_2024_research.graphs.static_models.gnn import GraphSAGE, GAT
 
 
 
 
 class ColesBatchToSubgraphConverter:
-    def __init__(self, graph_file_path, item_id2graph_id_path, client_id2graph_id_path):
+    def __init__(self, graph_file_path, item_id2graph_id_path, client_id2graph_id_path, is_train_phase=True):
         self.client_item_g: ClientItemGraph = ClientItemGraph.from_graph_file(graph_file_path)
         self.item_id2graph_id = torch.load(item_id2graph_id_path)
         self.client_id2graph_id = torch.load(client_id2graph_id_path)
+        self.is_train_phase = is_train_phase
+        self.neg_edge_sampler = None
+        if is_train_phase:
+            self.neg_edge_sampler = RandEdgeSampler(self.client_item_g.g)
 
     def __call__(self, client_ids, item_ids):
         graph_item_ids = self.item_id2graph_id[item_ids]
@@ -135,9 +139,11 @@ class GnnModule(pl.LightningModule):
 
 
     def calc_loss(self, g, node_embeddings):
-        pos_scores = self.gnn_link_predictor.link_predictor(g, node_embeddings)
-        neg_g = construct_negative_graph(g, self.neg_items_per_pos)
-        neg_scores = self.gnn_link_predictor.link_predictor(neg_g, node_embeddings)
+        pos_src, pos_dst = g.edges()
+        pos_scores = self.gnn_link_predictor.link_predictor(pos_src, pos_dst, node_embeddings)
+        neg_src, neg_dst = self.gnn_link_predictor.neg_edge_sampler.sample(
+            self.neg_items_per_pos * len(g.number_of_edges()))
+        neg_scores = self.gnn_link_predictor.link_predictor(neg_src, neg_dst, node_embeddings)
         scores = torch.cat([pos_scores, neg_scores])
         labels = torch.cat([torch.ones(pos_scores.shape[0]), torch.zeros(neg_scores.shape[0])])
         loss = self.lp_criterion(scores, labels)
