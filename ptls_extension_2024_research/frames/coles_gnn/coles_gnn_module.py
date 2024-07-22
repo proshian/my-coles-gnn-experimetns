@@ -16,9 +16,8 @@ class ColesGnnModule(pl.LightningModule):
     """
     """
     def __init__(self,
-                 subgraph_getter: ColesBatchToSubgraphConverter,
                  seq_encoder: SeqEncoderContainer = None,
-                 head=None,
+                 coles_head=None,
                  coles_loss=None,
                  coles_validation_metric=None,
                  neg_items_per_pos = 1,
@@ -28,12 +27,10 @@ class ColesGnnModule(pl.LightningModule):
         super().__init__()
 
         gnn = self.get_gnn_from_seq_encoder(seq_encoder)
-        self.coles_module = CoLESModule_CITrx(seq_encoder, head, coles_loss, coles_validation_metric, 
+        self.coles_module = CoLESModule_CITrx(seq_encoder, coles_head, coles_loss, coles_validation_metric, 
                                            optimizer_partial=None, lr_scheduler_partial=None)
         self.gnn_module = GnnModule(gnn, optimizer_partial=None, lr_scheduler_partial=None, 
                                     neg_items_per_pos = neg_items_per_pos, lr_criterion_name = lr_criterion_name)
-        self.get_subgraph = subgraph_getter
-
         self._optimizer_partial = optimizer_partial
         self._lr_scheduler_partial = lr_scheduler_partial
 

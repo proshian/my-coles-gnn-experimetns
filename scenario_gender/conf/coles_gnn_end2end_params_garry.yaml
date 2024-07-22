@@ -39,11 +39,7 @@ trainer:
   deterministic: true
 
 pl_module:
-  _target_: ptls_extension_2024_research.frames.coles.gnn.coles_gnn_module.ColesGnnModule
-  coles_validation_metric:
-    _target_: ptls.frames.coles.metric.BatchRecallTopK
-    K: 4
-    metric: cosine
+  _target_: ptls_extension_2024_research.frames.coles_gnn.coles_gnn_module.ColesGnnModule
   seq_encoder:
     _target_: ptls.nn.RnnSeqEncoder
     trx_encoder: 
@@ -75,13 +71,13 @@ pl_module:
             client_id2graph_id_path: data/graphs/weighted/client_id2graph_id_path.pt
           gnn_link_predictor: 
             _target_: ptls_extension_2024_research.frames.gnn.gnn_module.GnnLinkPredictor
-            n_users: FILLME!!!!!!!!!!
-            n_items: FILLME!!!!!!!!!!
+            n_users: 15000
+            n_items: 184
             output_size: 10
             embedding_dim: 64
             train_client_embeddings: True
             train_item_embeddings: True
-            link_predictor_name: MLP,
+            link_predictor_name: MLP
             link_predictor_add_sigmoid: True
             gnn_name: GraphSAGE
             gnn_kwargs:
@@ -90,16 +86,20 @@ pl_module:
     hidden_size: 1024
     bidir: false
     trainable_starter: static
-  head:
+  coles_head:
     _target_: ptls.nn.Head
     use_norm_encoder: true
     input_size: ${pl_module.seq_encoder.hidden_size}
-  loss:
+  coles_loss:
     _target_: ptls.frames.coles.losses.ContrastiveLoss
     margin: 0.5
     sampling_strategy:
       _target_: ptls.frames.coles.sampling_strategies.HardNegativePairSelector
       neg_count: 5
+  coles_validation_metric:
+    _target_: ptls.frames.coles.metric.BatchRecallTopK
+    K: 4
+    metric: cosine
   optimizer_partial:
     _partial_: true
     _target_: torch.optim.Adam
