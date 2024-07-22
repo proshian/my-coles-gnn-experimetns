@@ -28,7 +28,8 @@ pytorch-lifestream = {editable = true, ref = "v0.6.0", git = "git+https://github
 hydra-optuna-sweeper = '>=1.2.0'
 protobuf = "==4.25"
 pydantic = "*"
-dgl = {file = "https://huggingface.co/datasets/proshian/dgl_wheels/resolve/main/torch-2.2/dgl-2.2.0+cu121-cp38-cp38-manylinux1_x86_64.whl"}
+dgl = {file = "https://data.dgl.ai/wheels/torch-2.2/cu121/dgl-2.2.0%2Bcu121-cp38-cp38-manylinux1_x86_64.whl"}
+# If dgl '.whl' file link is outdated use this: dgl = {file = "https://huggingface.co/datasets/proshian/dgl_wheels/resolve/main/torch-2.2/dgl-2.2.0+cu121-cp38-cp38-manylinux1_x86_64.whl"}
 
 [requires]
 python_version = "3.8"

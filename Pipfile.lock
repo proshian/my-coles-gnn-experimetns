@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "ade653ba387dec73a053a927059ebd363b3596df473648a8f9d453e25f7a404e"
+            "sha256": "c6bb5c0b974b3582ca66acd4dc9c5ef847a640d554c6381622161b31fc4b7f5a"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -369,7 +369,7 @@
             "version": "==0.12.1"
         },
         "dgl": {
-            "file": "https://huggingface.co/datasets/proshian/dgl_wheels/resolve/main/torch-2.2/dgl-2.2.0+cu121-cp38-cp38-manylinux1_x86_64.whl"
+            "file": "https://data.dgl.ai/wheels/torch-2.2/cu121/dgl-2.2.0%2Bcu121-cp38-cp38-manylinux1_x86_64.whl"
         },
         "docutils": {
             "hashes": [
@@ -1282,6 +1282,7 @@
         },
         "nvidia-nvjitlink-cu12": {
             "hashes": [
+                "sha256:98103729cc5226e13ca319a10bbf9433bbbd44ef64fe72f45f067cacc14b8d27",
                 "sha256:e782564d705ff0bf61ac3e1bf730166da66dd2fe9012f111ede5fc49b64ae697",
                 "sha256:f9b37bc5c8cf7509665cb6ada5aaa0ce65618f2332b7d3e78e9790511f111212"
             ],
@@ -2071,11 +2072,11 @@
         },
         "setuptools": {
             "hashes": [
-                "sha256:ca359bea0cd5c8ce267d7463239107e87f312f2e2a11b6ca6357565d82b6c0d7",
-                "sha256:f6640114f96be808024fbd1f721161215543796d3a68da4524349de700604ce8"
+                "sha256:032d42ee9fb536e33087fb66cac5f840eb9391ed05637b3f2a76a7c8fb477936",
+                "sha256:33874fdc59b3188304b2e7c80d9029097ea31627180896fb549c578ceb8a0855"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==71.0.2"
+            "version": "==71.1.0"
         },
         "six": {
             "hashes": [
@@ -2150,11 +2151,11 @@
         },
         "sympy": {
             "hashes": [
-                "sha256:3b6af8f4d008b9a1a6a4268b335b984b23835f26d1d60b0526ebc71d48a25f57",
-                "sha256:6b0b32a4673fb91bd3cac3b55406c8e01d53ae22780be467301cc452f6680c92"
+                "sha256:9cebf7e04ff162015ce31c9c6c9144daa34a93bd082f54fd8f12deca4f47515f",
+                "sha256:db36cdc64bf61b9b24578b6f7bab1ecdd2452cf008f34faa33776680c26d66f8"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==1.13.0"
+            "version": "==1.13.1"
         },
         "tenacity": {
             "hashes": [
@@ -3101,11 +3102,11 @@
         },
         "jupyterlab": {
             "hashes": [
-                "sha256:0b59d11808e84bb84105c73364edfa867dd475492429ab34ea388a52f2e2e596",
-                "sha256:df6e46969ea51d66815167f23d92f105423b7f1f06fa604d4f44aeb018c82c7b"
+                "sha256:343a979fb9582fd08c8511823e320703281cd072a0049bcdafdc7afeda7f2537",
+                "sha256:807a7ec73637744f879e112060d4b9d9ebe028033b7a429b2d1f4fc523d00245"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==4.2.3"
+            "version": "==4.2.4"
         },
         "jupyterlab-pygments": {
             "hashes": [
@@ -3372,10 +3373,10 @@
         },
         "pure-eval": {
             "hashes": [
-                "sha256:01eaab343580944bc56080ebe0a674b39ec44a945e6d09ba7db3cb8cec289350",
-                "sha256:2b45320af6dfaa1750f543d714b6d1c520a1688dec6fd24d339063ce0aaa9ac3"
+                "sha256:1db8e35b67b3d218d818ae653e27f06c3aa420901fa7b081ca98cbedc874e0d0",
+                "sha256:5f4e983f40564c576c7c8635ae88db5956bb2229d7e9237d03b3c0b0190eaf42"
             ],
-            "version": "==0.2.2"
+            "version": "==0.2.3"
         },
         "pycparser": {
             "hashes": [
@@ -3730,11 +3731,11 @@
         },
         "setuptools": {
             "hashes": [
-                "sha256:ca359bea0cd5c8ce267d7463239107e87f312f2e2a11b6ca6357565d82b6c0d7",
-                "sha256:f6640114f96be808024fbd1f721161215543796d3a68da4524349de700604ce8"
+                "sha256:032d42ee9fb536e33087fb66cac5f840eb9391ed05637b3f2a76a7c8fb477936",
+                "sha256:33874fdc59b3188304b2e7c80d9029097ea31627180896fb549c578ceb8a0855"
             ],
             "markers": "python_version >= '3.8'",
-            "version": "==71.0.2"
+            "version": "==71.1.0"
         },
         "six": {
             "hashes": [
