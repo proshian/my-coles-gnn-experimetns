@@ -67,8 +67,8 @@ pl_module:
             # item_id2graph_id_path: data/graphs/unweighted/item_id2graph_id_path.pt
             # client_id2graph_id_path: data/graphs/unweighted/client_id2graph_id_path.pt
             graph_file_path: data/graphs/weighted/full_graph.bin
-            item_id2graph_id_path: data/graphs/weighted/item_id2graph_id_path.pt
-            client_id2graph_id_path: data/graphs/weighted/client_id2graph_id_path.pt
+            item_id2graph_id_path: data/graphs/weighted/item_id2graph_id.pt
+            client_id2graph_id_path: data/graphs/weighted/client_id2graph_id.pt
           gnn_link_predictor: 
             _target_: ptls_extension_2024_research.frames.gnn.gnn_module.GnnLinkPredictor
             n_users: 15000
@@ -80,7 +80,7 @@ pl_module:
             link_predictor_name: MLP
             link_predictor_add_sigmoid: True
             gnn_name: GraphSAGE
-            gnn_kwargs:
+            gnn_kwargs_dict:
               num_layers: 1
     type: gru
     hidden_size: 1024

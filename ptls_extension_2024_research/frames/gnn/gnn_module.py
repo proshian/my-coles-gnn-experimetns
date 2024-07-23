@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 
 from ptls_extension_2024_research.graphs.graph import ClientItemGraph
-from ptls_extension_2024_research.graphs.utils import MLPPredictor, construct_negative_graph, RandEdgeSampler
+from ptls_extension_2024_research.graphs.utils import MLPPredictor, RandEdgeSampler
 from ptls_extension_2024_research.graphs.static_models.gnn import GraphSAGE, GAT
 
 
@@ -19,24 +19,39 @@ class ColesBatchToSubgraphConverter:
         if is_train_phase:
             self.neg_edge_sampler = RandEdgeSampler(self.client_item_g.g)
 
+    def get_coles_item_ids2subgraph_item_ids(self, 
+                                             subgraph_ids_to_graph_ids, 
+                                             item_ids) -> torch.Tensor:
+        graph_ids_to_subgraph_ids = {graph_id: subgraph_id 
+                                     for subgraph_id, graph_id 
+                                     in enumerate(subgraph_ids_to_graph_ids)}
+
+        coles_item_ids2subgraph_item_ids = [graph_ids_to_subgraph_ids[self.item_id2graph_id[item_id]] 
+                                            for item_id in item_ids]
+        
+        coles_item_ids2subgraph_item_ids = torch.LongTensor(coles_item_ids2subgraph_item_ids, 
+                                                            device=item_ids.device, requires_grad=False)
+        
+        return coles_item_ids2subgraph_item_ids
+
+
     def __call__(self, client_ids, item_ids):
+        """
+        client_ids: torch.Tensor, shape: (batch_size,)
+        item_ids: torch.Tensor, shape: (batch_size, seq_len)
+        """
         graph_item_ids = self.item_id2graph_id[item_ids]
         graph_client_ids = self.client_id2graph_id[client_ids]
         subgraph = self.client_item_g.get_subgraph(graph_item_ids, graph_client_ids)
         subgraph_ids_to_graph_ids = subgraph.ndata['_ID']
 
-        graph_ids_to_subgraph_ids = {graph_id: subgraph_id for subgraph_id, graph_id in enumerate(subgraph_ids_to_graph_ids)}
-
-        coles_item_ids2subgraph_item_ids = [graph_ids_to_subgraph_ids[graph_item_id] 
-                                            for graph_item_id 
-                                            in self.item_id2graph_id]
-        
-        coles_item_ids2subgraph_item_ids = torch.LongTensor(coles_item_ids2subgraph_item_ids, 
-                                                            device=item_ids.device, requires_grad=False)
+        coles_item_ds2subgraph_item_ids = self.get_coles_item_ids2subgraph_item_ids(
+            subgraph_ids_to_graph_ids, item_ids
+        )
         
         result = {
             'subgraph': subgraph,
-            'coles_item_ids2subgraph_item_ids': coles_item_ids2subgraph_item_ids
+            'coles_item_ids2subgraph_item_ids': coles_item_ds2subgraph_item_ids
         }
 
         return result
@@ -58,11 +73,11 @@ class GnnLinkPredictor(nn.Module):
                  link_predictor_name: str='MLP',
                  link_predictor_add_sigmoid: bool=True,
                  gnn_name: str='GraphSAGE',
-                 gnn_kwags_dict = None):
+                 gnn_kwargs_dict = None):
         super().__init__()
 
-        if gnn_kwags is None:
-            gnn_kwags = {}
+        if gnn_kwargs_dict is None:
+            gnn_kwargs_dict = {}
 
         self.__output_size = output_size
         self.n_users = n_users
@@ -78,7 +93,7 @@ class GnnLinkPredictor(nn.Module):
         # self.item_feats = nn.Embedding.from_pretrained(self.node_feats.weight[n_users:], freeze=False)
 
 
-        self.gnn = self._init_gnn(gnn_name, in_feats=embedding_dim, h_feats=output_size, **gnn_kwags_dict)
+        self.gnn = self._init_gnn(gnn_name, in_feats=embedding_dim, h_feats=output_size, **gnn_kwargs_dict)
         self.link_predictor = self._init_link_predictor(link_predictor_name, output_size, link_predictor_add_sigmoid)
 
     def _init_gnn(self, gnn_name, in_feats, h_feats, **gnn_kwags):

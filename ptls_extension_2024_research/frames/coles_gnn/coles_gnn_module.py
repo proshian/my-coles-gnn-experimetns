@@ -7,9 +7,9 @@ from ptls.frames.coles.sampling_strategies import HardNegativePairSelector
 from ptls.nn.head import Head
 from ptls.nn.seq_encoder.containers import SeqEncoderContainer
 from ptls_extension_2024_research import TrxEncoder_WithCIEmbeddings
-from ptls_extension_2024_research.nn.trx_encoder.client_item_encoder import GNNClientItemEncoder
+from ptls_extension_2024_research.nn.trx_encoder.client_item_encoder import StaticGNNTrainableClientItemEncoder
 from ptls_extension_2024_research.frames.coles_client_id_aware.coles_module__trx_with_ci_embs import CoLESModule_CITrx
-from ptls_extension_2024_research.frames.gnn.gnn_module import GnnModule, ColesBatchToSubgraphConverter
+from ptls_extension_2024_research.frames.gnn.gnn_module import GnnModule
 
 
 class ColesGnnModule(pl.LightningModule):
@@ -38,7 +38,7 @@ class ColesGnnModule(pl.LightningModule):
     def get_gnn_from_seq_encoder(self, seq_encoder):
         trx_encoder = seq_encoder.seq_encoder.trx_encoder
         assert isinstance(trx_encoder, TrxEncoder_WithCIEmbeddings), f"Unexpected trx_encoder type: {type(trx_encoder)}"
-        gnns_ci_embedders = [embedder for embedder in trx_encoder.client_item_embeddings if isinstance(embedder, GNNClientItemEncoder)]
+        gnns_ci_embedders = [embedder for embedder in trx_encoder.client_item_embeddings if isinstance(embedder, StaticGNNTrainableClientItemEncoder)]
         assert len(gnns_ci_embedders) == 1, f"Unexpected number of GNNClientItemEncoder instances: {len(gnns_ci_embedders)}"
         return gnns_ci_embedders[0].gnn_link_predictor
     
