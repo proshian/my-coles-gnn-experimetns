@@ -100,6 +100,9 @@ pl_module:
     _target_: ptls.frames.coles.metric.BatchRecallTopK
     K: 4
     metric: cosine
+  rand_edge_sampler_seed: 42
+  neg_items_per_pos: 1
+  lp_criterion_name: 'BCELoss'
   optimizer_partial:
     _partial_: true
     _target_: torch.optim.Adam

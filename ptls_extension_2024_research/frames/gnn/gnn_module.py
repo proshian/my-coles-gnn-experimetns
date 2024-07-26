@@ -102,7 +102,7 @@ class GnnLinkPredictor(nn.Module):
         if gnn_kwargs_dict is None:
             gnn_kwargs_dict = {}
 
-        self.__output_size = output_size
+        self._output_size = output_size
         self.n_users = n_users
         self.n_items = n_items
         self.train_client_embeddings = train_client_embeddings
@@ -146,6 +146,7 @@ class GnnModule(pl.LightningModule):
                  neg_edge_sampler,
                  neg_items_per_pos: int=1,
                  lp_criterion_name: str='BCELoss',):
+        super().__init__()
         self.gnn_link_predictor = gnn_link_predictor
         self._optimizer_partial = optimizer_partial
         self._lr_scheduler_partial = lr_scheduler_partial

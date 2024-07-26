@@ -49,7 +49,6 @@ class StaticGNNTrainableClientItemEncoder(BaseClientItemEncoder):
         super().__init__()
         self.gnn_link_predictor = gnn_link_predictor
         self.data_adapter = data_adapter
-        self.gnn_link_predictor.neg_edge_sampler = self.data_adapter.neg_edge_sampler
 
     def forward(self, client_ids: torch.Tensor, item_ids: torch.Tensor):
         """
@@ -66,7 +65,7 @@ class StaticGNNTrainableClientItemEncoder(BaseClientItemEncoder):
     
     @property
     def output_size(self):
-        return self.gnn_link_predictor.__output_size
+        return self.gnn_link_predictor._output_size
 
 
     

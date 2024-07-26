@@ -14,7 +14,12 @@ from ptls_extension_2024_research.frames.gnn.gnn_module import GnnModule
 from ptls_extension_2024_research.graphs.utils import RandEdgeSamplerFull
 
 
-
+def get_ci_embedder_from_seq_encoder(seq_encoder):
+    trx_encoder = seq_encoder.trx_encoder
+    assert isinstance(trx_encoder, TrxEncoder_WithCIEmbeddings), f"Unexpected trx_encoder type: {type(trx_encoder)}"
+    gnns_ci_embedders = [embedder for embedder in trx_encoder.client_item_embeddings if isinstance(embedder, StaticGNNTrainableClientItemEncoder)]
+    assert len(gnns_ci_embedders) == 1, f"Unexpected number of GNNClientItemEncoder instances: {len(gnns_ci_embedders)}"
+    return gnns_ci_embedders[0]
 
 class ColesGnnModule(pl.LightningModule):
     """
@@ -46,11 +51,7 @@ class ColesGnnModule(pl.LightningModule):
 
     
     def get_ci_embedder_from_seq_encoder(self, seq_encoder):
-        trx_encoder = seq_encoder.seq_encoder.trx_encoder
-        assert isinstance(trx_encoder, TrxEncoder_WithCIEmbeddings), f"Unexpected trx_encoder type: {type(trx_encoder)}"
-        gnns_ci_embedders = [embedder for embedder in trx_encoder.client_item_embeddings if isinstance(embedder, StaticGNNTrainableClientItemEncoder)]
-        assert len(gnns_ci_embedders) == 1, f"Unexpected number of GNNClientItemEncoder instances: {len(gnns_ci_embedders)}"
-        return gnns_ci_embedders[0]
+        return get_ci_embedder_from_seq_encoder(seq_encoder)
 
     def get_gnn_from_seq_encoder(self, seq_encoder):
         return self.get_ci_embedder_from_seq_encoder(seq_encoder).gnn_link_predictor
@@ -89,7 +90,9 @@ class ColesGnnModule(pl.LightningModule):
 
 
 
-class ColesGnnModuleFullGraph(ColesGnnModule):
+
+
+class ColesGnnModuleFullGraph(pl.LightningModule):
     """
     A special case of ColesGnnModule where RandEdgeSamplerFull is used
     """
@@ -100,28 +103,98 @@ class ColesGnnModuleFullGraph(ColesGnnModule):
                 coles_validation_metric=None,
                 rand_edge_sampler_seed = None,
                 neg_items_per_pos = 1,
-                lr_criterion_name = 'BCELoss',
+                lp_criterion_name = 'BCELoss',
                 optimizer_partial=None,
                 lr_scheduler_partial=None) -> None:
-        super(pl.LightningModule, self).__init__()  # calling "GrandParent's" init
+        super().__init__()  # calling "GrandParent's" init
         self.coles_module = CoLESModule_CITrx(seq_encoder, coles_head, coles_loss, coles_validation_metric, 
                                            optimizer_partial=None, lr_scheduler_partial=None)
-        
 
         ci_embedder = self.get_ci_embedder_from_seq_encoder(seq_encoder)
         gnn = ci_embedder.gnn_link_predictor
-        graph = ci_embedder.data_adapter.client_item_g
+        
+        graph = ci_embedder.data_adapter.client_item_g.g
         rand_edge_sampler = RandEdgeSamplerFull(
             graph, rand_edge_sampler_seed)
-
-
+        
         self.gnn_module = GnnModule(gnn, optimizer_partial=None, lr_scheduler_partial=None, 
                                     neg_edge_sampler=rand_edge_sampler,
                                     neg_items_per_pos = neg_items_per_pos, 
-                                    lr_criterion_name = lr_criterion_name)
+                                    lp_criterion_name = lp_criterion_name)
+        
         self._optimizer_partial = optimizer_partial
         self._lr_scheduler_partial = lr_scheduler_partial
 
+    def get_ci_embedder_from_seq_encoder(self, seq_encoder):
+        return get_ci_embedder_from_seq_encoder(seq_encoder)
+
+    def get_gnn_from_seq_encoder(self, seq_encoder):
+        return self.get_ci_embedder_from_seq_encoder(seq_encoder).gnn_link_predictor
+
+    # def forward(self, x):
+    #     pass
+
+    def training_step(self, batch, _):
+        subgraph = self.get_subgraph(batch)
+        gnn_loss = self.gnn_module.training_step(subgraph, _)
+        coles_loss = self.coles_module.training_step(batch, _)
+        full_loss = gnn_loss + coles_loss
+        return full_loss
+        
+
+    def validation_step(self, batch, _):
+        self.coles_module.validation_step(batch, _)
+        self.gnn_module.validation_step(batch, _) 
+
+    def on_validation_epoch_end(self):
+        self.coles_module.on_validation_epoch_end()
+
+    def configure_optimizers(self):
+        optimizer = self._optimizer_partial(self.parameters())
+        scheduler = self._lr_scheduler_partial(optimizer)
+        
+        if isinstance(scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+            scheduler = {
+                'scheduler': scheduler,
+                'monitor': self.metric_name,
+            }
+        return [optimizer], [scheduler]
+
+
+
+
+# class ColesGnnModuleFullGraph(ColesGnnModule):
+#     """
+#     A special case of ColesGnnModule where RandEdgeSamplerFull is used
+#     """
+#     def __init__(self,
+#                 seq_encoder: SeqEncoderContainer = None,
+#                 coles_head=None,
+#                 coles_loss=None,
+#                 coles_validation_metric=None,
+#                 rand_edge_sampler_seed = None,
+#                 neg_items_per_pos = 1,
+#                 lp_criterion_name = 'BCELoss',
+#                 optimizer_partial=None,
+#                 lr_scheduler_partial=None) -> None:
+#         super(pl.LightningModule, self).__init__()  # calling "GrandParent's" init
+#         self.coles_module = CoLESModule_CITrx(seq_encoder, coles_head, coles_loss, coles_validation_metric, 
+#                                            optimizer_partial=None, lr_scheduler_partial=None)
+
+#         ci_embedder = self.get_ci_embedder_from_seq_encoder(seq_encoder)
+#         gnn = ci_embedder.gnn_link_predictor
+        
+#         graph = ci_embedder.data_adapter.client_item_g.g
+#         rand_edge_sampler = RandEdgeSamplerFull(
+#             graph, rand_edge_sampler_seed)
+        
+#         self.gnn_module = GnnModule(gnn, optimizer_partial=None, lr_scheduler_partial=None, 
+#                                     neg_edge_sampler=rand_edge_sampler,
+#                                     neg_items_per_pos = neg_items_per_pos, 
+#                                     lp_criterion_name = lp_criterion_name)
+        
+#         self._optimizer_partial = optimizer_partial
+#         self._lr_scheduler_partial = lr_scheduler_partial
 
 
 
