@@ -6,14 +6,21 @@ from ptls.frames.coles.metric import BatchRecallTopK
 from ptls.frames.coles.sampling_strategies import HardNegativePairSelector
 from ptls.nn.head import Head
 from ptls.nn.seq_encoder.containers import SeqEncoderContainer
+
 from ptls_extension_2024_research import TrxEncoder_WithCIEmbeddings
 from ptls_extension_2024_research.nn.trx_encoder.client_item_encoder import StaticGNNTrainableClientItemEncoder
 from ptls_extension_2024_research.frames.coles_client_id_aware.coles_module__trx_with_ci_embs import CoLESModule_CITrx
 from ptls_extension_2024_research.frames.gnn.gnn_module import GnnModule
+from ptls_extension_2024_research.graphs.utils import RandEdgeSamplerFull
+
+
 
 
 class ColesGnnModule(pl.LightningModule):
     """
+    Arguments:
+    ----------
+    neg_edge_sampler is an object of an edge sampler calss
     """
     def __init__(self,
                  seq_encoder: SeqEncoderContainer = None,
@@ -23,25 +30,30 @@ class ColesGnnModule(pl.LightningModule):
                  neg_items_per_pos = 1,
                  lr_criterion_name = 'BCELoss',
                  optimizer_partial=None,
-                 lr_scheduler_partial=None):
+                 lr_scheduler_partial=None,
+                 neg_edge_sampler=None):
         super().__init__()
 
         gnn = self.get_gnn_from_seq_encoder(seq_encoder)
         self.coles_module = CoLESModule_CITrx(seq_encoder, coles_head, coles_loss, coles_validation_metric, 
                                            optimizer_partial=None, lr_scheduler_partial=None)
         self.gnn_module = GnnModule(gnn, optimizer_partial=None, lr_scheduler_partial=None, 
-                                    neg_items_per_pos = neg_items_per_pos, lr_criterion_name = lr_criterion_name)
+                                    neg_edge_sampler=neg_edge_sampler,
+                                    neg_items_per_pos = neg_items_per_pos, 
+                                    lr_criterion_name = lr_criterion_name)
         self._optimizer_partial = optimizer_partial
         self._lr_scheduler_partial = lr_scheduler_partial
 
     
-    def get_gnn_from_seq_encoder(self, seq_encoder):
+    def get_ci_embedder_from_seq_encoder(self, seq_encoder):
         trx_encoder = seq_encoder.seq_encoder.trx_encoder
         assert isinstance(trx_encoder, TrxEncoder_WithCIEmbeddings), f"Unexpected trx_encoder type: {type(trx_encoder)}"
         gnns_ci_embedders = [embedder for embedder in trx_encoder.client_item_embeddings if isinstance(embedder, StaticGNNTrainableClientItemEncoder)]
         assert len(gnns_ci_embedders) == 1, f"Unexpected number of GNNClientItemEncoder instances: {len(gnns_ci_embedders)}"
-        return gnns_ci_embedders[0].gnn_link_predictor
-    
+        return gnns_ci_embedders[0]
+
+    def get_gnn_from_seq_encoder(self, seq_encoder):
+        return self.get_ci_embedder_from_seq_encoder(seq_encoder).gnn_link_predictor
 
     # def forward(self, x):
     #     pass
@@ -74,6 +86,41 @@ class ColesGnnModule(pl.LightningModule):
 
 
     
+
+
+
+class ColesGnnModuleFullGraph(ColesGnnModule):
+    """
+    A special case of ColesGnnModule where RandEdgeSamplerFull is used
+    """
+    def __init__(self,
+                seq_encoder: SeqEncoderContainer = None,
+                coles_head=None,
+                coles_loss=None,
+                coles_validation_metric=None,
+                rand_edge_sampler_seed = None,
+                neg_items_per_pos = 1,
+                lr_criterion_name = 'BCELoss',
+                optimizer_partial=None,
+                lr_scheduler_partial=None) -> None:
+        super(pl.LightningModule, self).__init__()  # calling "GrandParent's" init
+        self.coles_module = CoLESModule_CITrx(seq_encoder, coles_head, coles_loss, coles_validation_metric, 
+                                           optimizer_partial=None, lr_scheduler_partial=None)
+        
+
+        ci_embedder = self.get_ci_embedder_from_seq_encoder(seq_encoder)
+        gnn = ci_embedder.gnn_link_predictor
+        graph = ci_embedder.data_adapter.client_item_g
+        rand_edge_sampler = RandEdgeSamplerFull(
+            graph, rand_edge_sampler_seed)
+
+
+        self.gnn_module = GnnModule(gnn, optimizer_partial=None, lr_scheduler_partial=None, 
+                                    neg_edge_sampler=rand_edge_sampler,
+                                    neg_items_per_pos = neg_items_per_pos, 
+                                    lr_criterion_name = lr_criterion_name)
+        self._optimizer_partial = optimizer_partial
+        self._lr_scheduler_partial = lr_scheduler_partial
 
 
 

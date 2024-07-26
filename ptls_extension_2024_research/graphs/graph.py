@@ -5,6 +5,11 @@ import torch
 
 @dataclass
 class ClientItemGraph:
+    """
+    A class to represent a graph with clients and items.
+    Given a list of client_ids and item_ids, it creates 
+    a subgraph with the clients, items, and their neighbors.
+    """
     g: dgl.DGLGraph
 
     def create_subgraph(self, client_ids: torch.Tensor, item_ids: torch.Tensor):
@@ -33,3 +38,23 @@ class ClientItemGraph:
         g = g_list[0]
         return cls(g)
 
+
+@dataclass
+class ClientItemGraphFull:
+    """
+    A special case of the ClientItemGraph where the subgraph 
+    is the same as the original full graph.
+    """
+    g: dgl.DGLGraph
+    
+    def __post_init__ (self):
+        self.g.ndata['NID'] = torch.arange(0, self.g.number_of_nodes())
+
+    def create_subgraph(self, client_ids: torch.Tensor, item_ids: torch.Tensor):
+        return self.g
+
+    @classmethod
+    def from_graph_file(cls, graph_file_path: str):
+        g_list, _ = dgl.load_graphs(graph_file_path, [0])
+        g = g_list[0]
+        return cls(g)

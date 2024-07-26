@@ -1,3 +1,6 @@
+from typing import Tuple
+
+
 import dgl
 import numpy as np
 import torch
@@ -5,27 +8,56 @@ from torch import nn
 
 
 class RandEdgeSampler:
-    def __init__(self, train_graph: dgl.DGLGraph, seed=None):
-        self.seed = None
-        src, dst = train_graph.edges()
-        self.src_list = np.unique(src.numpy()).astype(int)
-        self.dst_list = np.unique(dst.numpy()).astype(int)
-
-        if seed is not None:
-            self.seed = seed
+    """
+    Given a subgraph, samples random edges from it.
+    Is used as a negative sampler.
+    """
+    def __init__(self, seed=None):
+        self.seed = seed
+        if self.seed is not None:
             self.random_state = np.random.RandomState(self.seed)
 
-    def sample(self, size):
+    def _get_unique_src_dst_tuple(self, subgraph: dgl.DGLGraph) -> Tuple[np.ndarray, np.ndarray]:
+        src, dst = subgraph.edges()
+        src_arr = np.unique(src.numpy()).astype(int)
+        dst_arr = np.unique(dst.numpy()).astype(int)
+        return src_arr, dst_arr
+    
+    def _sample(self, src_arr: np.ndarray, dst_arr: np.ndarray, size: int) -> Tuple[np.ndarray, np.ndarray]:
         if self.seed is None:
-            src_index = np.random.randint(0, len(self.src_list), size)
-            dst_index = np.random.randint(0, len(self.dst_list), size)
+            src_index = np.random.randint(0, len(src_arr), size)
+            dst_index = np.random.randint(0, len(dst_arr), size)
         else:
-            src_index = self.random_state.randint(0, len(self.src_list), size)
-            dst_index = self.random_state.randint(0, len(self.dst_list), size)
-        return self.src_list[src_index], self.dst_list[dst_index]
+            src_index = self.random_state.randint(0, len(src_arr), size)
+            dst_index = self.random_state.randint(0, len(dst_arr), size)
+        return src_arr[src_index], dst_arr[dst_index]
+
+
+    def sample(self, subgraph: dgl.DGLGraph, size: int):
+        src_arr, dst_arr = self._get_unique_src_dst_tuple(subgraph)
+        return self._sample(src_arr, dst_arr, size)
 
     def reset_random_state(self):
         self.random_state = np.random.RandomState(self.seed)
+
+
+class RandEdgeSamplerFull(RandEdgeSampler):
+    """
+    A special case of RandEdgeSampler 
+    where the training is done on one version of the graph only
+    and thus the `_get_unique_src_dst_tuple` is done only once. 
+    """
+    def __init__(self, train_graph: dgl.DGLGraph, seed=None):
+        super().__init__(seed)
+        self.train_graph = train_graph
+        self.src_arr, self.dst_arr = self._get_unique_src_dst_tuple(train_graph)
+
+    def sample(self, subgraph, size):
+        assert self.train_graph is subgraph
+        return self._sample(self.src_arr, self.dst_arr, size)
+
+
+
 
 
 class MLPPredictor(nn.Module):

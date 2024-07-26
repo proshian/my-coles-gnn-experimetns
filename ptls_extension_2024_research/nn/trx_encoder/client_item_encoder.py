@@ -49,7 +49,7 @@ class StaticGNNTrainableClientItemEncoder(BaseClientItemEncoder):
         super().__init__()
         self.gnn_link_predictor = gnn_link_predictor
         self.data_adapter = data_adapter
-        self.gnn_link_predictor = self.data_adapter.neg_edge_sampler
+        self.gnn_link_predictor.neg_edge_sampler = self.data_adapter.neg_edge_sampler
 
     def forward(self, client_ids: torch.Tensor, item_ids: torch.Tensor):
         """

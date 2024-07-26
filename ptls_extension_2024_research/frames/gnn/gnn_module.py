@@ -10,14 +10,10 @@ from ptls_extension_2024_research.graphs.static_models.gnn import GraphSAGE, GAT
 
 
 class ColesBatchToSubgraphConverter:
-    def __init__(self, graph_file_path, item_id2graph_id_path, client_id2graph_id_path, is_train_phase=True):
+    def __init__(self, graph_file_path, item_id2graph_id_path, client_id2graph_id_path):
         self.client_item_g: ClientItemGraph = ClientItemGraph.from_graph_file(graph_file_path)
         self.item_id2graph_id = torch.load(item_id2graph_id_path)
         self.client_id2graph_id = torch.load(client_id2graph_id_path)
-        self.is_train_phase = is_train_phase
-        self.neg_edge_sampler = None
-        if is_train_phase:
-            self.neg_edge_sampler = RandEdgeSampler(self.client_item_g.g)
 
     def get_coles_item_ids2subgraph_item_ids(self, 
                                              subgraph_ids_to_graph_ids, 
@@ -57,6 +53,33 @@ class ColesBatchToSubgraphConverter:
         return result
 
     
+
+
+
+class ColesBatchToSubgraphConverterFull(ColesBatchToSubgraphConverter):
+    """
+    A special case of ColesBatchToSubgraphConverter where
+    a full graph is used as a subgraph contatining client_ids and item_ids;
+    And it's guaranteed that g.ndata['_ID'] = range(n_nodes)
+    """
+    def __init__(self, graph_file_path, item_id2graph_id_path, client_id2graph_id_path):
+        super().__init__(graph_file_path, item_id2graph_id_path, client_id2graph_id_path)
+
+    def __call__(self, client_ids, item_ids):
+        """
+        client_ids: torch.Tensor, shape: (batch_size,)
+        item_ids: torch.Tensor, shape: (batch_size, seq_len)
+        """
+        
+        result = {
+            'subgraph': self.client_item_g,
+            'coles_item_ids2subgraph_item_ids': self.item_id2graph_id_path
+        }
+
+        return result
+
+
+
 
 
 class GnnLinkPredictor(nn.Module):
@@ -112,32 +135,6 @@ class GnnLinkPredictor(nn.Module):
         subgraph_node_embeddings = self.gnn(subgraph, self.node_feats[subgraph.ndata['_ID']])
         return subgraph_node_embeddings
     
-    def save_separate_embeddings(self, client_feats_path: str, item_feats_path: str) -> None:
-        client_feats = nn.Embedding.from_pretrained(self.node_feats.weight[:self.n_users], freeze=False)
-        item_feats = nn.Embedding.from_pretrained(self.node_feats.weight[self.n_users:], freeze=False)        
-        torch.save(client_feats.state_dict(), client_feats_path)
-        torch.save(item_feats.state_dict(), item_feats_path)
-        # logger.info(f"Client embeddings saved to {client_feats_path}")
-        # logger.info(f"Item embeddings saved to {item_feats_path}")
-    
-    @classmethod
-    def from_separate_embeddings(cls, n_users: int, n_items: int, output_size: int, embedding_dim: int, 
-                                 client_feats_path: str, item_feats_path: str, **kwargs):
-        model = cls(n_users=n_users, n_items=n_items, output_size=output_size, embedding_dim=embedding_dim, **kwargs)
-        model.client_feats.load_state_dict(torch.load(client_feats_path))
-        model.item_feats.load_state_dict(torch.load(item_feats_path))
-        
-        
-        model.node_feats = nn.Embedding.from_pretrained(
-            torch.cat((model.client_feats.weight, model.item_feats.weight), dim=0), 
-            freeze = False
-        )
-        
-        # logger.info(f"Client embeddings loaded from {client_feats_path}")
-        # logger.info(f"Item embeddings loaded from {item_feats_path}")
-        return model
-        
-
 
 
 
@@ -146,11 +143,13 @@ class GnnModule(pl.LightningModule):
                  gnn_link_predictor: GnnLinkPredictor,
                  optimizer_partial,
                  lr_scheduler_partial,
+                 neg_edge_sampler,
                  neg_items_per_pos: int=1,
                  lp_criterion_name: str='BCELoss',):
         self.gnn_link_predictor = gnn_link_predictor
         self._optimizer_partial = optimizer_partial
         self._lr_scheduler_partial = lr_scheduler_partial
+        self.neg_edge_sampler = neg_edge_sampler
 
         # loss
         self.neg_items_per_pos = neg_items_per_pos
@@ -160,7 +159,7 @@ class GnnModule(pl.LightningModule):
     def calc_loss(self, g, node_embeddings):
         pos_src, pos_dst = g.edges()
         pos_scores = self.gnn_link_predictor.link_predictor(pos_src, pos_dst, node_embeddings)
-        neg_src, neg_dst = self.gnn_link_predictor.neg_edge_sampler.sample(
+        neg_src, neg_dst = self.neg_edge_sampler.sample(
             self.neg_items_per_pos * len(g.number_of_edges()))
         neg_scores = self.gnn_link_predictor.link_predictor(neg_src, neg_dst, node_embeddings)
         scores = torch.cat([pos_scores, neg_scores])
@@ -169,13 +168,13 @@ class GnnModule(pl.LightningModule):
         return loss
 
 
-    def training_step(self, batch):
-        subgraph, subgraph_node_embeddings = self.gnn_link_predictor(batch)
+    def training_step(self, subgraph, _):
+        subgraph_node_embeddings = self.gnn_link_predictor(subgraph)
         return self.calc_loss(subgraph, subgraph_node_embeddings)
     
 
-    def validation_step(self, batch):
-        subgraph, subgraph_node_embeddings = self.forward(batch)
+    def validation_step(self, subgraph, _):
+        subgraph_node_embeddings = self.gnn_link_predictor(subgraph)
         val_loss = self.calc_loss(subgraph, subgraph_node_embeddings)
         return val_loss
     
