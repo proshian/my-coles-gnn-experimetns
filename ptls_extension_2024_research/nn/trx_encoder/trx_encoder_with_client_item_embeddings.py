@@ -247,6 +247,9 @@ class TrxEncoder_WithCIEmbeddings(TrxEncoderBase):
             processed_client_item_embeddings_lst = self._get_client_item_embeddings_lst(item_ids, client_ids)
             processed_embeddings.extend(processed_client_item_embeddings_lst)
         
+        # for emb in processed_embeddings:
+        #     print(emb.shape)
+        
         
         out = torch.cat(processed_embeddings, dim=2)
 

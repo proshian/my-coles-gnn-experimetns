@@ -2,7 +2,7 @@ import pytorch_lightning as pl
 import torch
 import torch.nn as nn
 
-from ptls_extension_2024_research.graphs.graph import ClientItemGraph
+from ptls_extension_2024_research.graphs.graph import ClientItemGraph, ClientItemGraphFull
 from ptls_extension_2024_research.graphs.utils import MLPPredictor, RandEdgeSampler
 from ptls_extension_2024_research.graphs.static_models.gnn import GraphSAGE, GAT
 
@@ -15,20 +15,21 @@ class ColesBatchToSubgraphConverter:
         self.item_id2graph_id = torch.load(item_id2graph_id_path)
         self.client_id2graph_id = torch.load(client_id2graph_id_path)
 
-    def get_coles_item_ids2subgraph_item_ids(self, 
-                                             subgraph_ids_to_graph_ids, 
-                                             item_ids) -> torch.Tensor:
+    def get_subgraph_item_ids_from_coles_item_ids(self, 
+                                                  subgraph_ids_to_graph_ids, 
+                                                  item_ids) -> torch.Tensor:
         graph_ids_to_subgraph_ids = {graph_id: subgraph_id 
                                      for subgraph_id, graph_id 
                                      in enumerate(subgraph_ids_to_graph_ids)}
 
-        coles_item_ids2subgraph_item_ids = [graph_ids_to_subgraph_ids[self.item_id2graph_id[item_id]] 
-                                            for item_id in item_ids]
+        subgraph_item_ids = [[graph_ids_to_subgraph_ids[self.item_id2graph_id[item_id]]]
+                                            for row in item_ids
+                                            for item_id in row]
         
-        coles_item_ids2subgraph_item_ids = torch.LongTensor(coles_item_ids2subgraph_item_ids, 
+        subgraph_item_ids = torch.LongTensor(subgraph_item_ids, 
                                                             device=item_ids.device, requires_grad=False)
         
-        return coles_item_ids2subgraph_item_ids
+        return subgraph_item_ids
 
 
     def __call__(self, client_ids, item_ids):
@@ -38,16 +39,16 @@ class ColesBatchToSubgraphConverter:
         """
         graph_item_ids = self.item_id2graph_id[item_ids]
         graph_client_ids = self.client_id2graph_id[client_ids]
-        subgraph = self.client_item_g.get_subgraph(graph_item_ids, graph_client_ids)
+        subgraph = self.client_item_g.create_subgraph(graph_item_ids, graph_client_ids)
         subgraph_ids_to_graph_ids = subgraph.ndata['_ID']
 
-        coles_item_ds2subgraph_item_ids = self.get_coles_item_ids2subgraph_item_ids(
+        subgraph_item_ids = self.get_subgraph_item_ids_from_coles_item_ids(
             subgraph_ids_to_graph_ids, item_ids
         )
         
         result = {
             'subgraph': subgraph,
-            'coles_item_ids2subgraph_item_ids': coles_item_ds2subgraph_item_ids
+            'subgraph_item_ids': subgraph_item_ids
         }
 
         return result
@@ -56,27 +57,92 @@ class ColesBatchToSubgraphConverter:
 
 
 
-class ColesBatchToSubgraphConverterFull(ColesBatchToSubgraphConverter):
+class ColesBatchToSubgraphConverterFull(torch.nn.Module):
     """
     A special case of ColesBatchToSubgraphConverter where
     a full graph is used as a subgraph contatining client_ids and item_ids;
     And it's guaranteed that g.ndata['_ID'] = range(n_nodes)
     """
     def __init__(self, graph_file_path, item_id2graph_id_path, client_id2graph_id_path):
-        super().__init__(graph_file_path, item_id2graph_id_path, client_id2graph_id_path)
+        super().__init__()
+        self.client_item_g: ClientItemGraphFull = ClientItemGraphFull.from_graph_file(graph_file_path)
+        self.item_id2graph_id = torch.load(item_id2graph_id_path).to('cuda')
+        self.client_id2graph_id = torch.load(client_id2graph_id_path).to('cuda')
+
+    def get_subgraph_item_ids_from_coles_item_ids(self, 
+                                                  subgraph_ids_to_graph_ids, 
+                                                  item_ids) -> torch.Tensor:
+        graph_ids_to_subgraph_ids = {int(graph_id): int(subgraph_id) 
+                                     for subgraph_id, graph_id 
+                                     in enumerate(subgraph_ids_to_graph_ids)}
+        
+        # print(self.item_id2graph_id[1])
+
+        subgraph_item_ids = [
+            [graph_ids_to_subgraph_ids[int(self.item_id2graph_id[int(item_id)])] for item_id in row]
+            for row in item_ids]
+        
+        subgraph_item_ids = torch.LongTensor(subgraph_item_ids).to('cuda')
+        subgraph_item_ids.requires_grad = False        
+        # print(subgraph_item_ids.shape)
+
+        return subgraph_item_ids
 
     def __call__(self, client_ids, item_ids):
         """
         client_ids: torch.Tensor, shape: (batch_size,)
         item_ids: torch.Tensor, shape: (batch_size, seq_len)
         """
+        item_ids = item_ids.to('cuda')
+        client_ids = client_ids.to('cuda')
+        graph_item_ids = self.item_id2graph_id[item_ids]
+        
+        graph_client_ids = self.client_id2graph_id[client_ids]
+        subgraph = self.client_item_g.create_subgraph(graph_item_ids, graph_client_ids)
+        subgraph_ids_to_graph_ids = subgraph.ndata['_ID']
+
+        subgraph_item_ids = self.get_subgraph_item_ids_from_coles_item_ids(
+            subgraph_ids_to_graph_ids, item_ids
+        )
         
         result = {
-            'subgraph': self.client_item_g,
-            'coles_item_ids2subgraph_item_ids': self.item_id2graph_id_path
+            'subgraph': subgraph,
+            'subgraph_item_ids': subgraph_item_ids
         }
 
         return result
+
+# class ColesBatchToSubgraphConverterFull(ColesBatchToSubgraphConverter):
+#     """
+#     A special case of ColesBatchToSubgraphConverter where
+#     a full graph is used as a subgraph contatining client_ids and item_ids;
+#     And it's guaranteed that g.ndata['_ID'] = range(n_nodes)
+#     """
+#     def __init__(self, graph_file_path, item_id2graph_id_path, client_id2graph_id_path):
+#         self.client_item_g: ClientItemGraphFull = ClientItemGraphFull.from_graph_file(graph_file_path)
+#         self.item_id2graph_id = torch.load(item_id2graph_id_path)
+#         self.client_id2graph_id = torch.load(client_id2graph_id_path)
+
+#     def __call__(self, client_ids, item_ids):
+#         """
+#         client_ids: torch.Tensor, shape: (batch_size,)
+#         item_ids: torch.Tensor, shape: (batch_size, seq_len)
+#         """
+#         graph_item_ids = self.item_id2graph_id[item_ids]
+#         graph_client_ids = self.client_id2graph_id[client_ids]
+#         subgraph = self.client_item_g.get_subgraph(graph_item_ids, graph_client_ids)
+#         subgraph_ids_to_graph_ids = subgraph.ndata['_ID']
+
+#         subgraph_item_ids = self.get_subgraph_item_ids_from_coles_item_ids(
+#             subgraph_ids_to_graph_ids, item_ids
+#         )
+        
+#         result = {
+#             'subgraph': subgraph,
+#             'subgraph_item_ids': subgraph_item_ids
+#         }
+
+#         return result
 
 
 
@@ -132,7 +198,7 @@ class GnnLinkPredictor(nn.Module):
         raise Exception(f'No such link predictor {link_predictor_name}')
 
     def forward(self, subgraph):
-        subgraph_node_embeddings = self.gnn(subgraph, self.node_feats[subgraph.ndata['_ID']])
+        subgraph_node_embeddings = self.gnn(subgraph, self.node_feats(subgraph.ndata['_ID']))
         return subgraph_node_embeddings
     
 
@@ -160,12 +226,14 @@ class GnnModule(pl.LightningModule):
     def calc_loss(self, g, node_embeddings):
         pos_src, pos_dst = g.edges()
         pos_scores = self.gnn_link_predictor.link_predictor(pos_src, pos_dst, node_embeddings)
-        neg_src, neg_dst = self.neg_edge_sampler.sample(
-            self.neg_items_per_pos * len(g.number_of_edges()))
+        neg_src, neg_dst = self.neg_edge_sampler.sample(g,
+            self.neg_items_per_pos * g.number_of_edges())
         neg_scores = self.gnn_link_predictor.link_predictor(neg_src, neg_dst, node_embeddings)
         scores = torch.cat([pos_scores, neg_scores])
         labels = torch.cat([torch.ones(pos_scores.shape[0]), torch.zeros(neg_scores.shape[0])])
-        loss = self.lp_criterion(scores, labels)
+        # squeeze_, потому что иначе scores.shape = (n_elems, 1); labels.shape = (n_elems,); разные размерности являются ошибкой
+        # print(scores.device, labels.device)
+        loss = self.lp_criterion(scores.squeeze_(), labels.to('cuda'))
         return loss
 
 

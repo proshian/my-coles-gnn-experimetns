@@ -11,12 +11,14 @@ PYTHONPATH=.. python -m ptls.pl_train_module \
     pl_module.lr_scheduler_partial.step_size=60 \
     model_path="models/coles_gnn_model_for_check_2.p" \
     logger_name="coles_gnn_model_for_check_2"  \
-    data_module.train_batch_size=96 \
+    data_module.train_batch_size=14 \
     data_module.train_num_workers=4 \
-    data_module.valid_batch_size=128 \
+    data_module.valid_batch_size=32 \
     data_module.valid_num_workers=4  \
     trainer.max_epochs=5 
     
+# trai batch 24 is too much
+
 # PYTHONPATH=.. python -m ptls.pl_inference    \
 #     model_path="models/coles_gnn_model_for_check_2.p" \
 #     embed_file_name="coles_gnn_model_for_check_2_embeddings" \

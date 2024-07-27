@@ -56,11 +56,11 @@ class StaticGNNTrainableClientItemEncoder(BaseClientItemEncoder):
         item_ids: torch.Tensor, shape: (batch_size, seq_len)
         """
         data_adapter_result = self.data_adapter(client_ids, item_ids)
-        subgraph, coles_item_ids2subgraph_item_ids = \
+        subgraph, subgraph_item_ids = \
             (data_adapter_result['subgraph'],
-             data_adapter_result['coles_item_ids2subgraph_item_ids'])
+             data_adapter_result['subgraph_item_ids'])
         subgraph_node_embeddings = self.gnn_link_predictor(subgraph)
-        item_embeddings = subgraph_node_embeddings[coles_item_ids2subgraph_item_ids]
+        item_embeddings = subgraph_node_embeddings[subgraph_item_ids]
         return item_embeddings
     
     @property

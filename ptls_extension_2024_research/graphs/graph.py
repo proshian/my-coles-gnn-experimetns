@@ -30,12 +30,12 @@ class ClientItemGraph:
         # Induce a subgraph with all the relevant nodes
         subgraph = dgl.node_subgraph(self.g, all_nodes)
 
-        return subgraph
+        return subgraph.to(torch.device('cuda'))
 
     @classmethod
     def from_graph_file(cls, graph_file_path: str):
         g_list, _ = dgl.load_graphs(graph_file_path, [0])
-        g = g_list[0]
+        g = g_list[0].cuda()
         return cls(g)
 
 
@@ -48,7 +48,7 @@ class ClientItemGraphFull:
     g: dgl.DGLGraph
     
     def __post_init__ (self):
-        self.g.ndata['NID'] = torch.arange(0, self.g.number_of_nodes())
+        self.g.ndata['_ID'] = torch.arange(0, self.g.number_of_nodes(), device='cuda')
 
     def create_subgraph(self, client_ids: torch.Tensor, item_ids: torch.Tensor):
         return self.g
@@ -56,5 +56,5 @@ class ClientItemGraphFull:
     @classmethod
     def from_graph_file(cls, graph_file_path: str):
         g_list, _ = dgl.load_graphs(graph_file_path, [0])
-        g = g_list[0]
+        g = g_list[0].to(torch.device('cuda'))
         return cls(g)

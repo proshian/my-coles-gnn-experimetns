@@ -19,8 +19,8 @@ class RandEdgeSampler:
 
     def _get_unique_src_dst_tuple(self, subgraph: dgl.DGLGraph) -> Tuple[np.ndarray, np.ndarray]:
         src, dst = subgraph.edges()
-        src_arr = np.unique(src.numpy()).astype(int)
-        dst_arr = np.unique(dst.numpy()).astype(int)
+        src_arr = np.unique(src.cpu().numpy()).astype(int)
+        dst_arr = np.unique(dst.cpu().numpy()).astype(int)
         return src_arr, dst_arr
     
     def _sample(self, src_arr: np.ndarray, dst_arr: np.ndarray, size: int) -> Tuple[np.ndarray, np.ndarray]:

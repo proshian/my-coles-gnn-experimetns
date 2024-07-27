@@ -112,10 +112,9 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
 
         ci_embedder = self.get_ci_embedder_from_seq_encoder(seq_encoder)
         gnn = ci_embedder.gnn_link_predictor
-        
-        graph = ci_embedder.data_adapter.client_item_g.g
+        self.client_item_g = ci_embedder.data_adapter.client_item_g
         rand_edge_sampler = RandEdgeSamplerFull(
-            graph, rand_edge_sampler_seed)
+            self.client_item_g.g, rand_edge_sampler_seed)
         
         self.gnn_module = GnnModule(gnn, optimizer_partial=None, lr_scheduler_partial=None, 
                                     neg_edge_sampler=rand_edge_sampler,
@@ -135,7 +134,9 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
     #     pass
 
     def training_step(self, batch, _):
-        subgraph = self.get_subgraph(batch)
+        # Достать из батча client_ids и item_ids
+        # В данном частном случае можно передавать что угодно, но в общем случае нужно решить этот оврпос
+        subgraph = self.client_item_g.create_subgraph(_, _)
         gnn_loss = self.gnn_module.training_step(subgraph, _)
         coles_loss = self.coles_module.training_step(batch, _)
         full_loss = gnn_loss + coles_loss
@@ -143,11 +144,15 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
         
 
     def validation_step(self, batch, _):
+        # Достать из батча client_ids и item_ids
+        # В данном частном случае можно передавать что угодно, но в общем случае нужно решить этот оврпос
+        subgraph = self.client_item_g.create_subgraph(_, _)
         self.coles_module.validation_step(batch, _)
-        self.gnn_module.validation_step(batch, _) 
+        self.gnn_module.validation_step(subgraph, _) 
 
     def on_validation_epoch_end(self):
-        self.coles_module.on_validation_epoch_end()
+        # self.coles_module.on_validation_epoch_end()
+        pass 
 
     def configure_optimizers(self):
         optimizer = self._optimizer_partial(self.parameters())

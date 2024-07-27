@@ -16,3 +16,18 @@ class CoLESModule_CITrx(CoLESModule):
         if self._head is not None:
             y_h = self._head(y_h)
         return y_h, client_ids
+
+    # temp solution to avoid logging outside callbacks in coles_gnn_modules
+    def training_step(self, batch, _):
+        y_h, y = self.shared_step(*batch)
+        loss = self._loss(y_h, y)
+        # self.log('loss', loss)
+        if type(batch) is tuple:
+            x, y = batch
+            # if isinstance(x, PaddedBatch):
+            #     self.log('seq_len', x.seq_lens.float().mean(), prog_bar=True)
+        else:
+            # this code should not be reached
+            # self.log('seq_len', -1, prog_bar=True)
+            raise AssertionError('batch is not a tuple')
+        return loss
