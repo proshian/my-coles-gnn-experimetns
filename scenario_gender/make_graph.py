@@ -75,7 +75,7 @@ def main_create_graph(config):
     torch.save(item_id2full_graph_id,
                os.path.join(config.output_graph_path, config.output_item_id2full_graph_id_file))
 
-    print(client_id2full_graph_id)
+    # print(client_id2full_graph_id)
 
     # create train graph
     train_clients = get_train_clients(df_data, config)
