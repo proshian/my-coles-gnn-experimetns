@@ -46,15 +46,17 @@ class ClientItemGraphFull:
     is the same as the original full graph.
     """
     g: dgl.DGLGraph
+    device_name: str
     
     def __post_init__ (self):
-        self.g.ndata['_ID'] = torch.arange(0, self.g.number_of_nodes(), device='cuda')
+        device = torch.device(self.device_name)
+        self.g.ndata['_ID'] = torch.arange(0, self.g.number_of_nodes(), device=device)
 
     def create_subgraph(self, client_ids: torch.Tensor, item_ids: torch.Tensor):
         return self.g
 
     @classmethod
-    def from_graph_file(cls, graph_file_path: str):
+    def from_graph_file(cls, graph_file_path: str, device_name: str):
         g_list, _ = dgl.load_graphs(graph_file_path, [0])
-        g = g_list[0].to(torch.device('cuda'))
-        return cls(g)
+        g = g_list[0].to(torch.device(device_name))
+        return cls(g, device_name)

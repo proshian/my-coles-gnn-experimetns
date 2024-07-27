@@ -33,7 +33,7 @@ data_module:
   valid_num_workers: 16
 
 trainer: 
-  accelerator: gpu
+  accelerator: cpu
   max_epochs: 150
   enable_checkpointing: false
   deterministic: true
@@ -69,6 +69,7 @@ pl_module:
             graph_file_path: data/graphs/weighted/full_graph.bin
             item_id2graph_id_path: data/graphs/weighted/item_id2graph_id.pt
             client_id2graph_id_path: data/graphs/weighted/client_id2graph_id.pt
+            device_name: cpu
           gnn_link_predictor: 
             _target_: ptls_extension_2024_research.frames.gnn.gnn_module.GnnLinkPredictor
             n_users: 15000

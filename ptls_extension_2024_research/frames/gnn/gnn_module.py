@@ -59,15 +59,16 @@ class ColesBatchToSubgraphConverter:
 
 class ColesBatchToSubgraphConverterFull(torch.nn.Module):
     """
-    A special case of ColesBatchToSubgraphConverter where
+    A special case of `ColesBatchToSubgraphConverter` where
     a full graph is used as a subgraph contatining client_ids and item_ids;
     And it's guaranteed that g.ndata['_ID'] = range(n_nodes)
     """
-    def __init__(self, graph_file_path, item_id2graph_id_path, client_id2graph_id_path):
+    def __init__(self, graph_file_path: str, item_id2graph_id_path: str, client_id2graph_id_path: str, device_name: str):
         super().__init__()
-        self.client_item_g: ClientItemGraphFull = ClientItemGraphFull.from_graph_file(graph_file_path)
-        self.item_id2graph_id = torch.load(item_id2graph_id_path).to('cuda')
-        self.client_id2graph_id = torch.load(client_id2graph_id_path).to('cuda')
+        self.device = torch.device(device_name)
+        self.client_item_g: ClientItemGraphFull = ClientItemGraphFull.from_graph_file(graph_file_path, device_name)
+        self.item_id2graph_id = torch.load(item_id2graph_id_path).to(self.device)
+        self.client_id2graph_id = torch.load(client_id2graph_id_path).to(self.device)
 
     def get_subgraph_item_ids_from_coles_item_ids(self, 
                                                   subgraph_ids_to_graph_ids, 
@@ -82,7 +83,7 @@ class ColesBatchToSubgraphConverterFull(torch.nn.Module):
             [graph_ids_to_subgraph_ids[int(self.item_id2graph_id[int(item_id)])] for item_id in row]
             for row in item_ids]
         
-        subgraph_item_ids = torch.LongTensor(subgraph_item_ids).to('cuda')
+        subgraph_item_ids = torch.LongTensor(subgraph_item_ids).to(self.device)
         subgraph_item_ids.requires_grad = False        
         # print(subgraph_item_ids.shape)
 
@@ -93,8 +94,8 @@ class ColesBatchToSubgraphConverterFull(torch.nn.Module):
         client_ids: torch.Tensor, shape: (batch_size,)
         item_ids: torch.Tensor, shape: (batch_size, seq_len)
         """
-        item_ids = item_ids.to('cuda')
-        client_ids = client_ids.to('cuda')
+        item_ids = item_ids.to(self.device)
+        client_ids = client_ids.to(self.device)
         graph_item_ids = self.item_id2graph_id[item_ids]
         
         graph_client_ids = self.client_id2graph_id[client_ids]
@@ -230,11 +231,13 @@ class GnnModule(pl.LightningModule):
             self.neg_items_per_pos * g.number_of_edges())
         neg_scores = self.gnn_link_predictor.link_predictor(neg_src, neg_dst, node_embeddings)
         scores = torch.cat([pos_scores, neg_scores])
-        labels = torch.cat([torch.ones(pos_scores.shape[0]), torch.zeros(neg_scores.shape[0])])
-        # squeeze_, потому что иначе scores.shape = (n_elems, 1); labels.shape = (n_elems,); разные размерности являются ошибкой
+        # `like` operations ensure proper device and shape. The shape has to be EXACTLY the same as scores.
+        labels = torch.cat([torch.ones_like(pos_scores), torch.zeros_like(neg_scores)]) 
         # print(scores.device, labels.device)
-        loss = self.lp_criterion(scores.squeeze_(), labels.to('cuda'))
+        # print(scores.shape, labels.shape)
+        loss = self.lp_criterion(scores, labels)
         return loss
+
 
 
     def training_step(self, subgraph, _):
