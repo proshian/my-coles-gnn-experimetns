@@ -12,6 +12,7 @@ from ptls_extension_2024_research.nn.trx_encoder.client_item_encoder import Stat
 from ptls_extension_2024_research.frames.coles_client_id_aware.coles_module__trx_with_ci_embs import CoLESModule_CITrx
 from ptls_extension_2024_research.frames.gnn.gnn_module import GnnModule
 from ptls_extension_2024_research.graphs.utils import RandEdgeSamplerFull
+from ptls_extension_2024_research.lightning_utlis import LogLstEl
 
 
 def get_ci_embedder_from_seq_encoder(seq_encoder):
@@ -138,8 +139,11 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
         # В данном частном случае можно передавать что угодно, но в общем случае нужно решить этот оврпос
         subgraph = self.client_item_g.create_subgraph(_, _)
         gnn_loss = self.gnn_module.training_step(subgraph, _)
-        coles_loss = self.coles_module.training_step(batch, _)
+        coles_loss, log_list = self.coles_module._training_step(batch, _)
         full_loss = gnn_loss + coles_loss
+
+        for el in log_list:
+            self.log(f"coles/{el.name}", el.value, *el.args, **el.kwargs)
         return full_loss
         
 
@@ -150,9 +154,12 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
         self.coles_module.validation_step(batch, _)
         self.gnn_module.validation_step(subgraph, _) 
 
+    def _on_validation_epoch_end__coles(self):
+        self.log(f'coles/valid/{self.coles_module.metric_name}', self.coles_module._validation_metric.compute(), prog_bar=True)
+        self.coles_module._validation_metric.reset()
+
     def on_validation_epoch_end(self):
-        # self.coles_module.on_validation_epoch_end()
-        pass 
+        self._on_validation_epoch_end__coles()
 
     def configure_optimizers(self):
         optimizer = self._optimizer_partial(self.parameters())
