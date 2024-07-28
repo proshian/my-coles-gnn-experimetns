@@ -142,6 +142,9 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
         coles_loss, log_list = self.coles_module._training_step(batch, _)
         full_loss = gnn_loss + coles_loss
 
+
+        self.log('gnn/lp_loss', gnn_loss)
+
         for el in log_list:
             self.log(f"coles/{el.name}", el.value, *el.args, **el.kwargs)
         return full_loss
@@ -152,7 +155,8 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
         # В данном частном случае можно передавать что угодно, но в общем случае нужно решить этот оврпос
         subgraph = self.client_item_g.create_subgraph(_, _)
         self.coles_module.validation_step(batch, _)
-        self.gnn_module.validation_step(subgraph, _) 
+        gnn_loss = self.gnn_module.validation_step(subgraph, _) 
+        self.log('gnn/valid/lp_loss', gnn_loss)
 
     def _on_validation_epoch_end__coles(self):
         self.log(f'coles/valid/{self.coles_module.metric_name}', self.coles_module._validation_metric.compute(), prog_bar=True)
