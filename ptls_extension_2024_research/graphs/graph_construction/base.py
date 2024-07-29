@@ -22,14 +22,14 @@ class GraphBuilder(ABC):
             df, client_col, item_col = self._build_simple_edge_df(df, client_col, item_col)
             weight_col = None
 
-        g, client_id2graph_id, item_id2graph_id = create_graph_from_df(df, client_col, item_col, weight_col)
-        return g, client_id2graph_id, item_id2graph_id
+        g, client_id2graph_id, item_id2graph_id, items_cnt = create_graph_from_df(df, client_col, item_col, weight_col)
+        return g, client_id2graph_id, item_id2graph_id, items_cnt
 
 
 def create_graph_from_df(df, client_col: str, item_col: str, weight_col: Optional[str] = None):
     # Create a dictionary to map node names to integers
-    unique_nodes_client = df[client_col].unique().astype(int)
-    unique_nodes_item = df[item_col].unique().astype(int)
+    unique_nodes_client = np.sort(df[client_col].unique().astype(int))
+    unique_nodes_item = np.sort(df[item_col].unique().astype(int))
 
     # create index mapping
     client_id2graph_id = torch.zeros(unique_nodes_client.max()+1, dtype=torch.long)
@@ -55,4 +55,4 @@ def create_graph_from_df(df, client_col: str, item_col: str, weight_col: Optiona
         weights_bi = torch.cat([weights, weights])
         g.edata['weight'] = weights_bi
 
-    return g, client_id2graph_id, item_id2graph_id
+    return g, client_id2graph_id, item_id2graph_id, len(unique_nodes_item)
