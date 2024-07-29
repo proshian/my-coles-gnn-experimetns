@@ -32,12 +32,14 @@ def create_graph_from_df(df, client_col: str, item_col: str, weight_col: Optiona
     unique_nodes_item = np.sort(df[item_col].unique().astype(int))
 
     # create index mapping
-    client_id2graph_id = torch.zeros(unique_nodes_client.max()+1, dtype=torch.long)
+    client_id2graph_id = torch.full(size = (unique_nodes_client.max()+1,), fill_value=-1, dtype=torch.long)
     client_id2graph_id[unique_nodes_client] = torch.arange(len(unique_nodes_client))
 
     # items always follow user index
-    item_id2graph_id = torch.zeros(unique_nodes_item.max() + 1, dtype=torch.long)
+    item_id2graph_id = torch.full(size = (unique_nodes_item.max() + 1,), fill_value=-1, dtype=torch.long)
     item_id2graph_id[unique_nodes_item] = torch.arange(len(unique_nodes_item)) + len(unique_nodes_client)
+
+    print(item_id2graph_id)
 
     # Convert source and destination columns to integer indices
     src = client_id2graph_id[df[client_col].values]
