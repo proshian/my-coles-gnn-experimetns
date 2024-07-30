@@ -65,14 +65,14 @@ class DatasetConverter:
                                    'and column IDs that corresponding dataframes should' \
                                    'be joined on with the main dataset. \n' \
                                     'Format: `file_name_1` `column_name_1` ... `file_name_n` `column_name_n`')
-        parser.add_argument('--cols_category', nargs='*', default=[],
-                            help = 'List of categorical columns. All categorical ' \
-                                   'features are encoded with embedding indexes. ' \
-                                   'The indexes correspond to frequency rank:' \
-                                   'All values are sorted by frequency in descending order ' \
-                                   'and are numbered according to the order. ' \
-                                   'The most common value will be replaced with 1, ' \
-                                   'second common value will be replaced with 2 etc.')
+        parser.add_argument(
+            '--cols_category', nargs='*', default=[],
+            help = 'List of categorical columns. All categorical features are ' \
+                    'encoded with embedding indexes. The indexes correspond to ' \
+                    'frequency rank and are consequtive numbers from 2 to `unique_values_num`. ' \
+                    'The most common value will be replaced with 2, second common value ' \
+                    'will be replaced with 3 etc.' \
+                    'There is also index 1 the corresponds to null values in orig column.')
         parser.add_argument('--cols_log_norm', nargs='*', default=[],
                             help='List of columns to apply log transformation to. ' \
                                  'Log transformation is applied as signum(x) * log(|x| + 1)')
@@ -99,6 +99,11 @@ class DatasetConverter:
                             'Notice that stdout will always contain both ' \
                             'Spark logs and script logs, which makes it hard to read. ' \
                             'Thus, log_file is useful to be able to read only script logs.')
+
+        parser.add_argument(
+            '--save-orig-new-map-cols', nargs='*', default=[],
+            help='List of columns for which to save a CSV file with ' \
+            'a mapping from original category feature values to their encodings.')
 
 
         args = parser.parse_args(args)
@@ -192,12 +197,14 @@ class DatasetConverter:
         return df_encoder
 
     def encode_col(self, df, col_name, df_encoder):
+        # Replace nulls with '#EMPTY'.
         df = df.withColumn(col_name, F.coalesce(F.col(col_name).cast('string'), F.lit('#EMPTY')))
 
         col_orig = '_orig_' + col_name
         df = df.withColumnRenamed(col_name, col_orig)
 
         df = df.join(df_encoder, on=col_orig, how='left')
+        # Replace null values with `1`.
         df = df.withColumn(col_name, F.coalesce(F.col(col_name), F.lit(1)))
         df = df.drop(col_orig)
 
@@ -343,6 +350,8 @@ class DatasetConverter:
             df_data = self.encode_col(df_data, col, encoders[col])
             if print_dataset_info:
                 logger.info(f'Encoder stat for "{col}":\ncodes | trx_count\n{self.pd_hist(df_data, col)}')
+            if col in self.config.save_orig_new_map_cols:
+                self.save_encoder_mapping(encoders[col], col)
 
         if print_dataset_info:
             df = df_data.groupby(col_client_id).agg(F.count(F.lit(1)).alias("trx_count"))
@@ -592,6 +601,14 @@ class DatasetConverter:
             source_data = self._td_default(source_data, cols_event_time)
 
         return source_data
+
+    def save_encoder_mapping(self, df_encoder: DataFrame, col_name: str) -> None:
+        """
+        Save the mapping from original category feature values to their encodings for a given column.
+        """
+        output_path = os.path.join(self.config.data_path, f"{col_name}_mapping.csv")
+        df_encoder.toPandas().to_csv(output_path, index=False)
+        logger.info(f'Saved encoder mapping for column "{col_name}" to {output_path}')
 
 
 if __name__ == '__main__':
