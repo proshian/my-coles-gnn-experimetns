@@ -1,7 +1,9 @@
+device: cuda
+
 defaults:
   - _self_
   - dataset_unsupervised/parquet
-  - inference/smaller_for_check.yaml
+  - inference/with_client_id
   - inference/seq_encoder/pretrained
 
 seed_everything: 42
@@ -33,7 +35,7 @@ data_module:
   valid_num_workers: 16
 
 trainer: 
-  accelerator: cuda
+  accelerator: ${device}
   max_epochs: 150
   enable_checkpointing: false
   deterministic: true
@@ -58,31 +60,29 @@ pl_module:
       col_item_ids: mcc_code
       
       client_item_embeddings:
-        _target_: ptls_extension_2024_research.hydra_utils.kwargs_to_list
-        gnn_ci_embedder:
-          _target_: ptls_extension_2024_research.nn.trx_encoder.client_item_encoder.StaticGNNTrainableClientItemEncoder
-          data_adapter:
-            _target_: ptls_extension_2024_research.frames.gnn.gnn_module.ColesBatchToSubgraphConverterFull
-            # graph_file_path: data/graphs/unweighted/full_graph.bin
-            # item_id2graph_id_path: data/graphs/unweighted/item_id2graph_id_path.pt
-            # client_id2graph_id_path: data/graphs/unweighted/client_id2graph_id_path.pt
-            graph_file_path: data/graphs/weighted/train_graph.bin
-            item_id2graph_id_path: data/graphs/weighted/item_id2train_graph_id.pt
-            client_id2graph_id_path: data/graphs/weighted/client_id2train_graph_id.pt
-            device_name: cuda
-          gnn_link_predictor: 
-            _target_: ptls_extension_2024_research.frames.gnn.gnn_module.GnnLinkPredictor
-            n_users: 15000
-            n_items: 184
-            output_size: 10
-            embedding_dim: 64
-            train_client_embeddings: True
-            train_item_embeddings: True
-            link_predictor_name: MLP
-            link_predictor_add_sigmoid: True
-            gnn_name: GraphSAGE
-            gnn_kwargs_dict:
-              num_layers: 1
+      - _target_: ptls_extension_2024_research.nn.trx_encoder.client_item_encoder.StaticGNNTrainableClientItemEncoder
+        data_adapter:
+          _target_: ptls_extension_2024_research.frames.gnn.gnn_module.ColesBatchToSubgraphConverterFull
+          # graph_file_path: data/graphs/unweighted/full_graph.bin
+          # item_id2graph_id_path: data/graphs/unweighted/item_id2graph_id_path.pt
+          # client_id2graph_id_path: data/graphs/unweighted/client_id2graph_id_path.pt
+          graph_file_path: data/graphs/weighted/train_graph.bin
+          item_id2graph_id_path: data/graphs/weighted/item_id2train_graph_id.pt
+          client_id2graph_id_path: data/graphs/weighted/client_id2train_graph_id.pt
+          device_name: ${device}
+        gnn_link_predictor: 
+          _target_: ptls_extension_2024_research.frames.gnn.gnn_module.GnnLinkPredictor
+          n_users: 15000
+          n_items: 184
+          output_size: 10
+          embedding_dim: 64
+          train_client_embeddings: True
+          train_item_embeddings: True
+          link_predictor_name: MLP
+          link_predictor_add_sigmoid: True
+          gnn_name: GraphSAGE
+          gnn_kwargs_dict:
+            num_layers: 1
     type: gru
     hidden_size: 1024
     bidir: false

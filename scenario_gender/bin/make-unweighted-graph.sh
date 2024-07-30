@@ -14,6 +14,7 @@ python make_graph.py \
 --output_item_id2full_graph_id_file "item_id2full_graph_id.pt" \
 --output_client_id2train_graph_id_file "client_id2train_graph_id.pt" \
 --output_item_id2train_graph_id_file "item_id2train_graph_id.pt" \
+--item_map_file_path "data/mcc_code_mapping.csv" \
 --log_file "results/dataset_gender.txt" \
 
 # 152 sec with    --print_dataset_info

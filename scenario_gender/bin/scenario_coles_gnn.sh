@@ -15,11 +15,11 @@ PYTHONPATH=.. python -m ptls.pl_train_module \
     data_module.train_num_workers=4 \
     data_module.valid_batch_size=64 \
     data_module.valid_num_workers=4  \
-    trainer.max_epochs=5 
+    # trainer.max_epochs=2
     
 
-# PYTHONPATH=.. python -m ptls.pl_inference    \
-#     model_path="models/coles_gnn_model_for_check_2.p" \
-#     embed_file_name="coles_gnn_model_for_check_2_embeddings" \
-#     inference.batch_size=40 \
-#     --config-dir conf --config-name coles_gnn_params.yaml 
+PYTHONPATH=.. python -m pl_inference_with_client_id    \
+    model_path="models/coles_gnn_model_2.p" \
+    embed_file_name="coles_gnn_model_2_embeddings" \
+    inference.batch_size=32 \
+    --config-dir conf --config-name coles_gnn_end2end_params_garry_full_graph 

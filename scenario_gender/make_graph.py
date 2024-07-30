@@ -13,7 +13,6 @@ import torch
 
 from ptls_extension_2024_research.graphs.graph_construction.gender import GenderGraphBuilder
 from ptls_extension_2024_research.graphs.utils import create_subgraph_with_all_neighbors
-from scenario_gender.make_dataset_help_no_ptls import encode_col
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +23,7 @@ def parse_args(args=None):
     parser.add_argument('--trx_file', type=str)
     parser.add_argument('--col_client_id', type=str)
     parser.add_argument('--col_item_id', type=str)
+    parser.add_argument('--item_map_file_path', type=str)
     parser.add_argument('--cols_log_norm', nargs='*', default=[])
     parser.add_argument('--test_ids_path', type=os.path.abspath)
 
@@ -38,30 +38,43 @@ def parse_args(args=None):
     parser.add_argument('--use_weights', action='store_true', default=False)
 
     args = parser.parse_args(args)
-    args.__dict__['data_path'] = 'data'
-    args.__dict__['trx_file'] = 'transactions.csv'
-    args.__dict__['col_client_id'] = 'customer_id'
-    args.__dict__['col_item_id'] = "mcc_code"
-    args.__dict__['cols_log_norm'] =[ 'amount']
-    args.__dict__['test_ids_path'] = "data/test_ids.csv"
-    args.__dict__['output_graph_path'] = 'data/graphs/weighted'
-    args.__dict__['output_train_graph_file'] = "train_graph.bin"
-    args.__dict__['output_full_graph_file'] = "full_graph.bin"
-    args.__dict__['output_client_id2full_graph_id_file'] = "client_id2full_graph_id.pt"
-    args.__dict__['output_item_id2full_graph_id_file'] = "item_id2full_graph_id.pt"
-    args.__dict__['output_client_id2train_graph_id_file'] = "client_id2train_graph_id.pt"
-    args.__dict__['output_item_id2train_graph_id_file'] = "item_id2train_graph_id.pt"
-    args.__dict__['log_file'] = "results/dataset_gender.txt"
-    args.__dict__['use_weights'] = "true"
-    
-    
+    # args.__dict__['data_path'] = 'data'
+    # args.__dict__['trx_file'] = 'transactions.csv'
+    # args.__dict__['col_client_id'] = 'customer_id'
+    # args.__dict__['col_item_id'] = "mcc_code"
+    # args.__dict__['cols_log_norm'] =[ 'amount']
+    # args.__dict__['test_ids_path'] = "data/test_ids.csv"
+    # args.__dict__['output_graph_path'] = 'data/graphs/weighted'
+    # args.__dict__['output_train_graph_file'] = "train_graph.bin"
+    # args.__dict__['output_full_graph_file'] = "full_graph.bin"
+    # args.__dict__['output_client_id2full_graph_id_file'] = "client_id2full_graph_id.pt"
+    # args.__dict__['output_item_id2full_graph_id_file'] = "item_id2full_graph_id.pt"
+    # args.__dict__['output_client_id2train_graph_id_file'] = "client_id2train_graph_id.pt"
+    # args.__dict__['output_item_id2train_graph_id_file'] = "item_id2train_graph_id.pt"
+    # args.__dict__['log_file'] = "results/dataset_gender.txt"
+    # args.__dict__['use_weights'] = "true"
     
     logger.info('Parsed args:\n' + '\n'.join([f'  {k:15}: {v}' for k, v in vars(args).items()]))
     return args
 
 
+def encode_item_ids(df_data: pd.DataFrame, config) -> pd.DataFrame:
+    ITEM_MAP_ORIG_COL_NAME = f'_orig_{config.col_item_id}'
+    ITEM_MAP_NULL_TOKEN = '#EMPTY'
+    
+    item_map = pd.read_csv(config.item_map_file_path)
+
+    df = df_data.rename(columns={config.col_item_id: ITEM_MAP_ORIG_COL_NAME})
+    df[ITEM_MAP_ORIG_COL_NAME] = df[ITEM_MAP_ORIG_COL_NAME].fillna(ITEM_MAP_NULL_TOKEN)
+    df = df.merge(item_map, on=ITEM_MAP_ORIG_COL_NAME, how='left')
+    df = df.drop(columns = [ITEM_MAP_ORIG_COL_NAME])
+    return df
+
+
 def preprocess_df(df_data, config):
-    df_data[config.col_item_id] = encode_col(df_data[config.col_item_id])
+    df_data = encode_item_ids(df_data, config)
+
+    logger.info(f"df_data.head() after item_encoding: \n{df_data.head()}")
 
     for col in config.cols_log_norm:
         df_data[col] = np.log1p(abs(df_data[col])) * np.sign(df_data[col])
