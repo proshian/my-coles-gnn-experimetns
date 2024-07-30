@@ -31,3 +31,12 @@ Same as `ColesDataset` from ptls, but
 * location: `frames.coles_client_id_aware.coles_module__trx_with_ci_embs.CoLESModule_CITrx`
 
 Similar to as `CoLESModule` from ptls, except it's expected that our version of `ColesDataset` is used and trx_encoder is our `TrxEncoder_WithCIEmbeddings` instead of `TrxEncoder`. This means that real client_ids should be provided in the dataset and trx_encoder should be able to create client-item embeddings.
+
+## make_datasets_spark.py
+* location: `make_datasets_spark`
+
+Similar to original. Differences:
+* load_transactions has "#mts" option
+* _td_mts method added
+
+Propbably wwill become a child of an origina class
