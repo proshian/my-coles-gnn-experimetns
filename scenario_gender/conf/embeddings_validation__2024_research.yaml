@@ -48,7 +48,7 @@ models:
       reg_lambda: null
       colsample_bytree: null
       min_child_samples: null
-    cpu_count: 8
+    cpu_count: 4
     preprocessing: 
       - _target_: sklearn.preprocessing.MaxAbsScaler
 
@@ -85,6 +85,11 @@ features:
     enabled: true
     read_params: 
       file_name: ${hydra:runtime.cwd}/data/mles_model_small_batch_2_embeddings.pickle
+    target_options: {}
+  coles_gnn: 
+    enabled: true
+    read_params: 
+      file_name: ${hydra:runtime.cwd}/data/coles_gnn_model_2_embeddings.pickle
     target_options: {}
 external_scores: {}
 report: 
