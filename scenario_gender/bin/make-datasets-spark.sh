@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-SPARK_LOCAL_IP="127.0.0.1" spark-submit \
+PYTHONPATH='..' SPARK_LOCAL_IP="127.0.0.1" spark-submit \
     --master local[8] \
     --name "Gender Make Dataset" \
     --driver-memory 16G \
@@ -22,6 +22,7 @@ SPARK_LOCAL_IP="127.0.0.1" spark-submit \
     --output_test_path "data/test_trx.parquet" \
     --output_test_ids_path "data/test_ids.csv" \
     --log_file "results/dataset_gender.txt" \
+    --save-orig-new-map-cols "mcc_code" \
     --print_dataset_info
 
 # 152 sec with    --print_dataset_info
