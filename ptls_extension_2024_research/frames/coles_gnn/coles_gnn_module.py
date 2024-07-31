@@ -40,6 +40,10 @@ class ColesGnnModule(pl.LightningModule):
                  neg_edge_sampler=None):
         super().__init__()
 
+        # ptls.training_module.py saves seq_encoder stored inside lightning module.
+        # So we have to have this property.
+        self.seq_encoder = seq_encoder
+
         gnn = self.get_gnn_from_seq_encoder(seq_encoder)
         self.coles_module = CoLESModule_CITrx(seq_encoder, coles_head, coles_loss, coles_validation_metric, 
                                            optimizer_partial=None, lr_scheduler_partial=None)
@@ -108,9 +112,13 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
                 optimizer_partial=None,
                 lr_scheduler_partial=None) -> None:
         super().__init__()  # calling "GrandParent's" init
+        # ptls.training_module.py saves seq_encoder stored inside lightning module.
+        # So we have to have this property.
+        self.seq_encoder = seq_encoder
+
         self.coles_module = CoLESModule_CITrx(seq_encoder, coles_head, coles_loss, coles_validation_metric, 
                                            optimizer_partial=None, lr_scheduler_partial=None)
-
+        
         ci_embedder = self.get_ci_embedder_from_seq_encoder(seq_encoder)
         gnn = ci_embedder.gnn_link_predictor
         self.client_item_g = ci_embedder.data_adapter.client_item_g
@@ -175,43 +183,6 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
                 'monitor': self.metric_name,
             }
         return [optimizer], [scheduler]
-
-
-
-
-# class ColesGnnModuleFullGraph(ColesGnnModule):
-#     """
-#     A special case of ColesGnnModule where RandEdgeSamplerFull is used
-#     """
-#     def __init__(self,
-#                 seq_encoder: SeqEncoderContainer = None,
-#                 coles_head=None,
-#                 coles_loss=None,
-#                 coles_validation_metric=None,
-#                 rand_edge_sampler_seed = None,
-#                 neg_items_per_pos = 1,
-#                 lp_criterion_name = 'BCELoss',
-#                 optimizer_partial=None,
-#                 lr_scheduler_partial=None) -> None:
-#         super(pl.LightningModule, self).__init__()  # calling "GrandParent's" init
-#         self.coles_module = CoLESModule_CITrx(seq_encoder, coles_head, coles_loss, coles_validation_metric, 
-#                                            optimizer_partial=None, lr_scheduler_partial=None)
-
-#         ci_embedder = self.get_ci_embedder_from_seq_encoder(seq_encoder)
-#         gnn = ci_embedder.gnn_link_predictor
-        
-#         graph = ci_embedder.data_adapter.client_item_g.g
-#         rand_edge_sampler = RandEdgeSamplerFull(
-#             graph, rand_edge_sampler_seed)
-        
-#         self.gnn_module = GnnModule(gnn, optimizer_partial=None, lr_scheduler_partial=None, 
-#                                     neg_edge_sampler=rand_edge_sampler,
-#                                     neg_items_per_pos = neg_items_per_pos, 
-#                                     lp_criterion_name = lp_criterion_name)
-        
-#         self._optimizer_partial = optimizer_partial
-#         self._lr_scheduler_partial = lr_scheduler_partial
-
 
 
 

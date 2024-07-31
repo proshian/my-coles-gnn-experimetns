@@ -57,7 +57,7 @@ class ColesBatchToSubgraphConverter:
 
 
 
-class ColesBatchToSubgraphConverterFull(torch.nn.Module):
+class ColesBatchToSubgraphConverterFull___ConvertMEToRegularConverter(torch.nn.Module):
     """
     A special case of `ColesBatchToSubgraphConverter` where
     a full graph is used as a subgraph contatining client_ids and item_ids;
@@ -112,6 +112,67 @@ class ColesBatchToSubgraphConverterFull(torch.nn.Module):
         }
 
         return result
+    
+
+
+
+
+
+class ColesBatchToSubgraphConverterFull(torch.nn.Module):
+    """
+    A special case of `ColesBatchToSubgraphConverter` where
+    a full graph is used as a subgraph contatining client_ids and item_ids;
+    And it's guaranteed that g.ndata['_ID'] = range(n_nodes)
+    """
+    def __init__(self, graph_file_path: str, item_id2graph_id_path: str, client_id2graph_id_path: str, device_name: str):
+        super().__init__()
+        self.device = torch.device(device_name)
+        self.client_item_g: ClientItemGraphFull = ClientItemGraphFull.from_graph_file(graph_file_path, device_name)
+        self.item_id2graph_id = torch.load(item_id2graph_id_path).to(self.device)
+
+    def get_subgraph_item_ids_from_coles_item_ids(self, 
+                                                  subgraph_ids_to_graph_ids, 
+                                                  item_ids) -> torch.Tensor:
+        graph_ids_to_subgraph_ids = {int(graph_id): int(subgraph_id) 
+                                     for subgraph_id, graph_id 
+                                     in enumerate(subgraph_ids_to_graph_ids)}
+        
+        # print(self.item_id2graph_id[1])
+
+        subgraph_item_ids = [
+            [graph_ids_to_subgraph_ids[int(self.item_id2graph_id[int(item_id)])] for item_id in row]
+            for row in item_ids]
+        
+        subgraph_item_ids = torch.LongTensor(subgraph_item_ids).to(self.device)
+        subgraph_item_ids.requires_grad = False        
+        # print(subgraph_item_ids.shape)
+
+        return subgraph_item_ids
+
+    def __call__(self, client_ids, item_ids):
+        """
+        client_ids: torch.Tensor, shape: (batch_size,)
+        item_ids: torch.Tensor, shape: (batch_size, seq_len)
+        """
+        item_ids = item_ids.to(self.device)
+        graph_item_ids = self.item_id2graph_id[item_ids]
+        
+        dummy_graph_client_ids = torch.zeros(1, device=self.device)
+        subgraph = self.client_item_g.create_subgraph(graph_item_ids, dummy_graph_client_ids)
+        subgraph_ids_to_graph_ids = subgraph.ndata['_ID']
+
+        subgraph_item_ids = self.get_subgraph_item_ids_from_coles_item_ids(
+            subgraph_ids_to_graph_ids, item_ids
+        )
+        
+        result = {
+            'subgraph': subgraph,
+            'subgraph_item_ids': subgraph_item_ids
+        }
+
+        return result
+    
+
 
 # class ColesBatchToSubgraphConverterFull(ColesBatchToSubgraphConverter):
 #     """

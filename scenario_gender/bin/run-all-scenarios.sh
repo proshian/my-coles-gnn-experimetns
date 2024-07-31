@@ -82,19 +82,22 @@ echo "==== Device cuda:${CUDA_VISIBLE_DEVICES} will be used"
 echo ""
 echo "==== Start"
 
+echo "==== Scenario: COLEs with GNN"
+sh bin/scenario_coles_gnn.sh
+
 echo "==== Scenario: COLEs"
 # sh bin/scenario_coles__for_check.sh
 # sh bin/scenario_coles.sh
 sh bin/scenario_coles__small_batch.sh
+
 echo "==== Scenario: COLEs with avg pool + linear as seq encoder"
 sh bin/scenario_coles_with_avg_pool.sh
-echo "==== Scenario: COLEs with GNN"
-sh bin/scenario_coles_gnn__for_check.sh
+
 
 
 
 # Compare
-rm results/scenario_gender_baselines_unsupervised.txt
+rm results/scenario_gender_2024_research.txt
 # rm -r conf/embeddings_validation.work/
 python -m embeddings_validation \
     --config-dir conf --config-name embeddings_validation__2024_research +workers=10 +total_cpu_count=4
