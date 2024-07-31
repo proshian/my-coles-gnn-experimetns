@@ -103,7 +103,8 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
     A special case of ColesGnnModule where RandEdgeSamplerFull is used
     """
     def __init__(self,
-                seq_encoder: SeqEncoderContainer = None,
+                seq_encoder: SeqEncoderContainer,
+                loss_gamma: float = 0.5,
                 coles_head=None,
                 coles_loss=None,
                 coles_validation_metric=None,
