@@ -74,7 +74,7 @@ pl_module:
           _target_: ptls_extension_2024_research.frames.gnn.gnn_module.GnnLinkPredictor
           n_users: 15000
           n_items: 184
-          output_size: 10
+          output_size: 48
           embedding_dim: 64
           train_client_embeddings: True
           train_item_embeddings: True
@@ -87,6 +87,7 @@ pl_module:
     hidden_size: 1024
     bidir: false
     trainable_starter: static
+  loss_gamma: 0.5
   coles_head:
     _target_: ptls.nn.Head
     use_norm_encoder: true

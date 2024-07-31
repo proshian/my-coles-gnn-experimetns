@@ -30,7 +30,7 @@ class ColesGnnModule(pl.LightningModule):
     """
     def __init__(self,
                  seq_encoder: SeqEncoderContainer,
-                 loss_gamma: float,
+                 loss_gamma: float = 0.5,
                  coles_head=None,
                  coles_loss=None,
                  coles_validation_metric=None,
