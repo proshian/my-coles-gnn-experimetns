@@ -29,7 +29,8 @@ class ColesGnnModule(pl.LightningModule):
     neg_edge_sampler is an object of an edge sampler calss
     """
     def __init__(self,
-                 seq_encoder: SeqEncoderContainer = None,
+                 seq_encoder: SeqEncoderContainer,
+                 loss_gamma: float,
                  coles_head=None,
                  coles_loss=None,
                  coles_validation_metric=None,
@@ -53,7 +54,7 @@ class ColesGnnModule(pl.LightningModule):
                                     lr_criterion_name = lr_criterion_name)
         self._optimizer_partial = optimizer_partial
         self._lr_scheduler_partial = lr_scheduler_partial
-
+        self.loss_gamma = loss_gamma
     
     def get_ci_embedder_from_seq_encoder(self, seq_encoder):
         return get_ci_embedder_from_seq_encoder(seq_encoder)
@@ -68,7 +69,7 @@ class ColesGnnModule(pl.LightningModule):
         subgraph = self.get_subgraph(batch)
         gnn_loss = self.gnn_module.training_step(subgraph, _)
         coles_loss = self.coles_module.training_step(batch, _)
-        full_loss = gnn_loss + coles_loss
+        full_loss = self.loss_gamma * gnn_loss + (1-self.loss_gamma) * coles_loss
         return full_loss
         
 
