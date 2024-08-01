@@ -15,7 +15,8 @@ PYTHONPATH=.. python -m ptls.pl_train_module \
     data_module.train_num_workers=4 \
     data_module.valid_batch_size=64 \
     data_module.valid_num_workers=4  \
-    pl_module.loss_gamma=0.1
+    pl_module.loss_gamma=0.1 \
+    trainer.max_epochs=40
     # trainer.max_epochs=2
     
 

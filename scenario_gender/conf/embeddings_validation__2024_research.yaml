@@ -76,20 +76,30 @@ metrics:
       needs_proba: false
 report_file: ${hydra:runtime.cwd}/results/scenario_gender_2024_research.txt
 features: 
-  coles_avg_pool: 
+  # coles_avg_pool: 
+  #   enabled: true
+  #   read_params: 
+  #     file_name: ${hydra:runtime.cwd}/data/coles_avg_pool_model_embeddings.pickle
+  #   target_options: {}
+  # coles: 
+  #   enabled: true
+  #   read_params: 
+  #     file_name: ${hydra:runtime.cwd}/data/mles_model_small_batch_2_embeddings.pickle
+  #   target_options: {}
+  coles_gnn_0_1: 
     enabled: true
     read_params: 
-      file_name: ${hydra:runtime.cwd}/data/coles_avg_pool_model_embeddings.pickle
+      file_name: ${hydra:runtime.cwd}/data/coles_gnn__g_0_1__has_orig_emb__sample_2__embeddings.pickle
     target_options: {}
-  coles: 
+ coles_gnn_0_5: 
     enabled: true
     read_params: 
-      file_name: ${hydra:runtime.cwd}/data/mles_model_small_batch_2_embeddings.pickle
+      file_name: ${hydra:runtime.cwd}/data/coles_gnn__g_0_5__has_orig_emb__sample_2__embeddings.pickle
     target_options: {}
-  coles_gnn: 
+ coles_gnn_0_9: 
     enabled: true
     read_params: 
-      file_name: ${hydra:runtime.cwd}/data/coles_gnn_model_2_embeddings.pickle
+      file_name: ${hydra:runtime.cwd}/data/coles_gnn__g_0_9__has_orig_emb__sample_2__embeddings.pickle
     target_options: {}
 external_scores: {}
 report: 

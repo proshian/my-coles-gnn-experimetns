@@ -1,4 +1,4 @@
-device: cpu
+device: cuda
 
 defaults:
   - _self_
