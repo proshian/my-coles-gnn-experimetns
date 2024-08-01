@@ -69,7 +69,7 @@ class ColesGnnModule(pl.LightningModule):
         subgraph = self.get_subgraph(batch)
         gnn_loss = self.gnn_module.training_step(subgraph, _)
         coles_loss = self.coles_module.training_step(batch, _)
-        full_loss = self.loss_gamma * gnn_loss + (1-self.loss_gamma) * coles_loss
+        full_loss = self.loss_gamma * coles_loss + (1-self.loss_gamma) * gnn_loss
         return full_loss
         
 
@@ -134,6 +134,7 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
         
         self._optimizer_partial = optimizer_partial
         self._lr_scheduler_partial = lr_scheduler_partial
+        self.loss_gamma = loss_gamma
 
     def get_ci_embedder_from_seq_encoder(self, seq_encoder):
         return get_ci_embedder_from_seq_encoder(seq_encoder)
@@ -150,7 +151,7 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
         subgraph = self.client_item_g.create_subgraph(_, _)
         gnn_loss = self.gnn_module.training_step(subgraph, _)
         coles_loss, log_list = self.coles_module._training_step(batch, _)
-        full_loss = gnn_loss + coles_loss
+        full_loss = self.loss_gamma * coles_loss + (1-self.loss_gamma) * gnn_loss
 
 
         self.log('gnn/lp_loss', gnn_loss)

@@ -11,9 +11,9 @@ PYTHONPATH=.. python -m ptls.pl_train_module \
     pl_module.lr_scheduler_partial.step_size=60 \
     model_path="models/coles_avg_pool_model_2.p" \
     logger_name="coles_avg_pool_model_2"  \
-    data_module.train_batch_size=64 \
+    # data_module.train_batch_size=64 \
     data_module.train_num_workers=4 \
-    data_module.valid_batch_size=64 \
+    # data_module.valid_batch_size=64 \
     data_module.valid_num_workers=4  \
     # trainer.max_epochs=1 
 
@@ -21,7 +21,6 @@ PYTHONPATH=.. python -m ptls.pl_train_module \
 PYTHONPATH=.. python -m ptls.pl_inference    \
     model_path="models/coles_avg_pool_model_2.p" \
     embed_file_name="coles_avg_pool_model_embeddings" \
-    inference.batch_size=45 \
+    inference.batch_size=32 \
     --config-dir conf --config-name mles_average_pool_params
-
-
+    
