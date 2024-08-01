@@ -72,29 +72,25 @@ check_and_handle_folder "conf/embeddings_validation.work" "$action_on_exist"
 
 # Start script execution
 echo "==== Folds split"
-python -m embeddings_validation \
-    --config-dir conf --config-name embeddings_validation_baselines_supervised +workers=10 +total_cpu_count=4 \
-    +split_only=True
-
+python -m embeddings_validation --config-dir conf --config-name embeddings_validation_baselines_supervised +workers=1 +total_cpu_count=4 +split_only=True
 
 
 echo "==== Device cuda:${CUDA_VISIBLE_DEVICES} will be used"
 echo ""
 echo "==== Start"
 
-echo "==== Scenario: COLEs with GNN 0_1 \n\n"
-sh bin/scenario_coles_gnn__g_0_1__has_orig_emb .sh
-
-echo "==== Scenario: COLEs with GNN 0_5 \n\n"
+#echo "==== Scenario: COLEs with GNN 0_1 \n\n"
+#sh bin/scenario_coles_gnn__g_0_1__has_orig_emb.sh
+#
+#echo "==== Scenario: COLEs with GNN 0_5 \n\n"
 sh bin/scenario_coles_gnn__g_0_5__has_orig_emb.sh
-
-echo "==== Scenario: COLEs with GNN 0_9 \n\n"
-sh bin/scenario_coles_gnn__g_0_9__has_orig_emb.sh
+#
+#echo "==== Scenario: COLEs with GNN 0_9 \n\n"
+#sh bin/scenario_coles_gnn__g_0_9__has_orig_emb.sh
 
 
 
 # Compare
-rm results/scenario_gender_2024_research.txt
+rm results/scenario_gender_2024_research.txt -f
 # rm -r conf/embeddings_validation.work/
-python -m embeddings_validation \
-    --config-dir conf --config-name embeddings_validation__2024_research +workers=10 +total_cpu_count=4
+python -m embeddings_validation --config-dir conf --config-name embeddings_validation__2024_research +workers=1 +total_cpu_count=4
