@@ -9,8 +9,8 @@ PYTHONPATH=.. python -m ptls.pl_train_module \
     data_module.valid_data.splitter.split_count=2 \
     pl_module.coles_validation_metric.K=1 \
     pl_module.lr_scheduler_partial.step_size=60 \
-    model_path="models/coles_gnn_0_5__dotprod__has_orig_emb.p" \
-    logger_name="coles_gnn_0_5__dotprod__has_orig_emb"  \
+    model_path="models/scenario_coles_gnn_0_5__dotprod__has_orig_emb_weights.p" \
+    logger_name="scenario_coles_gnn_0_5__dotprod__has_orig_emb_weights"  \
     data_module.train_batch_size=64 \
     data_module.train_num_workers=4 \
     data_module.valid_batch_size=64 \
@@ -23,7 +23,7 @@ PYTHONPATH=.. python -m ptls.pl_train_module \
     
 
 PYTHONPATH=.. python -m pl_inference_with_client_id    \
-    model_path="models/coles_gnn_0_5__dotprod__has_orig_emb.p" \
-    embed_file_name="coles_gnn_0_5__dotprod__has_orig_emb" \
+    model_path="models/scenario_coles_gnn_0_5__dotprod__has_orig_emb_weights.p" \
+    embed_file_name="scenario_coles_gnn_0_5__dotprod__has_orig_emb_weights" \
     inference.batch_size=32 \
     --config-dir conf --config-name coles_gnn_end2end_params_full_graph 
