@@ -81,6 +81,7 @@ pl_module:
           link_predictor_name: MLP
           link_predictor_add_sigmoid: True
           gnn_name: GraphSAGE
+          use_weights: False
           gnn_kwargs_dict:
             num_layers: 1
     type: gru
