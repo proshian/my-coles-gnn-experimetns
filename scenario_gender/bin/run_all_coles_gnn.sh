@@ -83,15 +83,23 @@ echo ""
 echo "==== Start"
 
 echo "==== Scenario: COLEs with GNN 0_1 \n\n"
-sh bin/scenario_coles_gnn__g_0_1__has_orig_emb .sh
+sh bin/scenario_coles_gnn__g_0_1__no_orig_emb__graph_sage.sh
 
 echo "==== Scenario: COLEs with GNN 0_5 \n\n"
-sh bin/scenario_coles_gnn__g_0_5__has_orig_emb.sh
+sh bin/scenario_coles_gnn__g_0_5__no_orig_emb__graph_sage.sh
 
 echo "==== Scenario: COLEs with GNN 0_9 \n\n"
-sh bin/scenario_coles_gnn__g_0_9__has_orig_emb.sh
+sh bin/scenario_coles_gnn__g_0_9__no_orig_emb__graph_sage.sh
 
 
+echo "==== Scenario: COLEs with GNN 0_1 \n\n"
+sh bin/scenario_coles_gnn__g_0_1__has_orig_emb__graph_sage.sh
+
+echo "==== Scenario: COLEs with GNN 0_5 \n\n"
+sh bin/scenario_coles_gnn__g_0_5__has_orig_emb__graph_sage.sh
+
+echo "==== Scenario: COLEs with GNN 0_9 \n\n"
+sh bin/scenario_coles_gnn__g_0_9__has_orig_emb__graph_sage.sh
 
 # Compare
 rm results/scenario_gender_2024_research.txt
