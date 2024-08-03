@@ -78,7 +78,7 @@ def main(conf: DictConfig):
             devices = user_defined_gpus
         else:
             accelerator = "cpu"
-            devices = 0
+            devices = "auto"  # devices=0 is not a valid input using cpu accelerator. (c) pt.Lightning Error :)
     df_scores = pl.Trainer(accelerator=accelerator, devices=devices, max_epochs=-1).predict(model, inference_dl)
     df_scores = pd.concat(df_scores, axis=0)
     logger.info(f'df_scores examples: {df_scores.shape}:')

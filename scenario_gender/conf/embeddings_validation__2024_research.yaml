@@ -86,41 +86,68 @@ features:
   #   read_params: 
   #     file_name: ${hydra:runtime.cwd}/data/mles_model_small_batch_2_embeddings.pickle
   #   target_options: {}
-  coles_gnn_0_1__no_orig_emb__sample_2: 
+  coles_gnn_0_1__no_orig_emb__sample_2__graph_sage: 
     enabled: true
     read_params: 
-      file_name: ${hydra:runtime.cwd}/data/coles_gnn__g_0_1__no_orig_emb__sample_2__embeddings.pickle
+      file_name: ${hydra:runtime.cwd}/data/coles_gnn__g_0_1__no_orig_emb__sample_2__embeddings__graph_sage.pickle
     target_options: {}
-  coles_gnn_0_5__no_orig_emb__sample_2: 
+  coles_gnn_0_5__no_orig_emb__sample_2__graph_sage: 
     enabled: true
     read_params: 
-      file_name: ${hydra:runtime.cwd}/data/coles_gnn__g_0_5__no_orig_emb__sample_2__embeddings.pickle
+      file_name: ${hydra:runtime.cwd}/data/coles_gnn__g_0_5__no_orig_emb__sample_2__embeddings__graph_sage.pickle
     target_options: {}
-  coles_gnn_0_9__no_orig_emb__sample_2: 
+  coles_gnn_0_9__no_orig_emb__sample_2__graph_sage: 
     enabled: true
     read_params: 
-      file_name: ${hydra:runtime.cwd}/data/coles_gnn__g_0_9__no_orig_emb__sample_2__embeddings.pickle
+      file_name: ${hydra:runtime.cwd}/data/coles_gnn__g_0_9__no_orig_emb__sample_2__embeddings__graph_sage.pickle
     target_options: {}
+
   coles_40_epoches: 
     enabled: true
     read_params: 
       file_name: ${hydra:runtime.cwd}/data/mles_model_small_batch_2_embeddings__40_epoches.pickle
     target_options: {}
-  coles_gnn_0_1__has_orig_emb__sample_2: 
+
+  coles_gnn_0_1__has_orig_emb__sample_2__graph_sage: 
     enabled: true
     read_params: 
-      file_name: ${hydra:runtime.cwd}/data/coles_gnn__g_0_1__has_orig_emb__sample_2__embeddings.pickle
+      file_name: ${hydra:runtime.cwd}/data/coles_gnn__g_0_1__has_orig_emb__sample_2__embeddings__graph_sage.pickle
     target_options: {}
-  coles_gnn_0_5__has_orig_emb__sample_2: 
+  coles_gnn_0_5__has_orig_emb__sample_2__graph_sage: 
     enabled: true
     read_params: 
-      file_name: ${hydra:runtime.cwd}/data/coles_gnn__g_0_5__has_orig_emb__sample_2__embeddings.pickle
+      file_name: ${hydra:runtime.cwd}/data/coles_gnn__g_0_5__has_orig_emb__sample_2__embeddings__graph_sage.pickle
     target_options: {}
-  coles_gnn_0_9__has_orig_emb__sample_2: 
+  coles_gnn_0_9__has_orig_emb__sample_2__graph_sage: 
     enabled: true
     read_params: 
-      file_name: ${hydra:runtime.cwd}/data/coles_gnn__g_0_9__has_orig_emb__sample_2__embeddings.pickle
+      file_name: ${hydra:runtime.cwd}/data/coles_gnn__g_0_9__has_orig_emb__sample_2__embeddings__graph_sage.pickle
     target_options: {}
+
+  coles_gnn_0_1__no_orig_emb__sample_2__GAT: 
+    enabled: true
+    read_params: 
+      file_name: ${hydra:runtime.cwd}/data/coles_gnn__g_0_1__no_orig_emb__sample_2__GAT__embeddings.pickle
+    target_options: {}
+  coles_gnn_0_5__no_orig_emb__sample_2__GAT: 
+    enabled: true
+    read_params: 
+      file_name: ${hydra:runtime.cwd}/data/coles_gnn__g_0_5__no_orig_emb__sample_2__GAT__embeddings.pickle
+    target_options: {}
+    
+  coles_gnn_0_5__has_orig_emb__sample_2__GAT: 
+    enabled: true
+    read_params: 
+      file_name: ${hydra:runtime.cwd}/data/coles_gnn__g_0_5__has_orig_emb__sample_2__embeddings_GAT.pickle
+    target_options: {}
+
+
+  coles_gnn_0_5__dotprod__has_orig_emb:
+    enabled: true
+    read_params: 
+      file_name: ${hydra:runtime.cwd}/data/coles_gnn_0_5__dotprod__has_orig_emb.pickle
+    target_options: {}
+
 external_scores: {}
 report: 
   is_check_train: false
@@ -131,11 +158,11 @@ report:
       float_format: "{:.3f}"
       baseline_key: 
         - lgbm
-        - coles_gnn_0_1__no_orig_emb__sample_2
+        - coles_40_epoches
       split_columns: true
     accuracy: 
       float_format: "{:.3f}"
       baseline_key: 
         - lgbm
-        - coles_gnn_0_1__no_orig_emb__sample_2
+        - coles_40_epoches
       split_columns: true

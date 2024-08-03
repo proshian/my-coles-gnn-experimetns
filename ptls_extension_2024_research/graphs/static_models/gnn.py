@@ -36,5 +36,6 @@ class GAT(nn.Module):
             h = layer(g, h)
             h = h.flatten(1)
         h = self.layers[-1](g, h)
+        h = h.flatten(1)
         return h
         # return h.mean(1)

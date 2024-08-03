@@ -8,7 +8,7 @@ defaults:
 
 seed_everything: 42
 logger_name: coles_gnn_model
-model_path: models/coles_gnn_model.p
+model_path: models/coles_gnn_model_GAT.p
 embed_file_name: coles_gnn_embeddings
 
 data_module:
@@ -80,9 +80,10 @@ pl_module:
           train_item_embeddings: True
           link_predictor_name: MLP
           link_predictor_add_sigmoid: True
-          gnn_name: GraphSAGE
+          gnn_name: GAT
           gnn_kwargs_dict:
-            num_layers: 1
+            num_layers: 2
+            num_heads: 4
     type: gru
     hidden_size: 1024
     bidir: false
