@@ -102,6 +102,26 @@ class MLPPredictorGraph(nn.Module):
             return g.edata['score'].sigmoid()
 
 
+class DotProductPredictor(nn.Module):
+    def __init__(self, add_sigmoid=True):
+        super().__init__()
+        self.add_sigmoid = add_sigmoid
+
+    def apply_edges(self, edges):
+        return {'score': torch.dot(edges.src['h'], edges.dst['h'])}
+        # h = torch.cat([edges.src['h'], edges.dst['h']], 1)
+        # return {'score': self.W2(self.act(self.W1(h)))}
+        # return {'score': self.sigmoid(self.W2(F.relu(self.W1(h)))).squeeze(1)}
+
+    def forward(self, g, h):
+        with g.local_scope():
+            g.ndata['h'] = h
+            g.apply_edges(self.apply_edges)
+            if not self.add_sigmoid:
+                return g.edata['score']
+            return g.edata['score'].sigmoid()
+
+
 def create_subgraph_with_all_neighbors(graph: dgl.DGLGraph, node_ids: torch.Tensor):
     # Find all neighbors by using the predecessors and successors
     in_neighbors = graph.in_edges(node_ids)[0].unique()

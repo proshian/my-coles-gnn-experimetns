@@ -76,9 +76,9 @@ def preprocess_df(df_data, config):
 
     logger.info(f"df_data.head() after item_encoding: \n{df_data.head()}")
 
-    for col in config.cols_log_norm:
-        df_data[col] = np.log1p(abs(df_data[col])) * np.sign(df_data[col])
-        df_data[col] /= abs(df_data[col]).max()
+    # for col in config.cols_log_norm:
+    #     df_data[col] = np.log1p(abs(df_data[col])) * np.sign(df_data[col])
+    #     df_data[col] /= abs(df_data[col]).max()
     return df_data
 
 

@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 
 from ptls_extension_2024_research.graphs.graph import ClientItemGraph, ClientItemGraphFull
-from ptls_extension_2024_research.graphs.utils import MLPPredictor, RandEdgeSampler
+from ptls_extension_2024_research.graphs.utils import MLPPredictor, RandEdgeSampler, DotProductPredictor
 from ptls_extension_2024_research.graphs.static_models.gnn import GraphSAGE, GAT
 
 
@@ -112,10 +112,6 @@ class ColesBatchToSubgraphConverterFull___ConvertMEToRegularConverter(torch.nn.M
         }
 
         return result
-    
-
-
-
 
 
 class ColesBatchToSubgraphConverterFull(torch.nn.Module):
@@ -224,6 +220,7 @@ class GnnLinkPredictor(nn.Module):
                  link_predictor_name: str='MLP',
                  link_predictor_add_sigmoid: bool=True,
                  gnn_name: str='GraphSAGE',
+                 use_edge_weights: bool=False,
                  gnn_kwargs_dict = None):
         super().__init__()
 
@@ -243,24 +240,30 @@ class GnnLinkPredictor(nn.Module):
         # self.client_feats = nn.Embedding.from_pretrained(self.node_feats.weight[:n_users], freeze=False)
         # self.item_feats = nn.Embedding.from_pretrained(self.node_feats.weight[n_users:], freeze=False)
 
-
-        self.gnn = self._init_gnn(gnn_name, in_feats=embedding_dim, h_feats=output_size, **gnn_kwargs_dict)
+        self.use_edge_weights = use_edge_weights
+        self.gnn = self._init_gnn(gnn_name, in_feats=embedding_dim, h_feats=output_size,
+                                  use_edge_weights=use_edge_weights, **gnn_kwargs_dict)
         self.link_predictor = self._init_link_predictor(link_predictor_name, output_size, link_predictor_add_sigmoid)
 
-    def _init_gnn(self, gnn_name, in_feats, h_feats, **gnn_kwags):
+    def _init_gnn(self, gnn_name, in_feats, h_feats, use_edge_weights, **gnn_kwags):
         if gnn_name == 'GraphSAGE':
-            return GraphSAGE(in_feats=in_feats, h_feats=h_feats, **gnn_kwags)
+            return GraphSAGE(in_feats=in_feats, h_feats=h_feats, use_edge_weights=use_edge_weights, **gnn_kwags)
         if gnn_name == 'GAT':
-            return GAT(in_feats=in_feats, h_feats=h_feats, **gnn_kwags)
+            return GAT(in_feats=in_feats, h_feats=h_feats, use_edge_weights=use_edge_weights, **gnn_kwags)
         raise Exception(f'No such graph model {gnn_name}')
     
     def _init_link_predictor(self, link_predictor_name, output_size, link_predictor_add_sigmoid):
         if link_predictor_name == 'MLP':
             return MLPPredictor(output_size, link_predictor_add_sigmoid)
+        if link_predictor_name == 'dot_product':
+            return DotProductPredictor(link_predictor_add_sigmoid)
         raise Exception(f'No such link predictor {link_predictor_name}')
 
     def forward(self, subgraph):
-        subgraph_node_embeddings = self.gnn(subgraph, self.node_feats(subgraph.ndata['_ID']))
+        edge_weights = None
+        if self.use_edge_weights:
+            edge_weights = subgraph.edata['weight']
+        subgraph_node_embeddings = self.gnn(subgraph, self.node_feats(subgraph.ndata['_ID']), edge_weights)
         return subgraph_node_embeddings
     
 
@@ -327,4 +330,3 @@ class GnnModule(pl.LightningModule):
                 'monitor': self.metric_name,
             }
         return [optimizer], [scheduler]
-
