@@ -9,7 +9,7 @@ model_path="models/${MODEL_NAME}_model.p"
 
 # PYTHONPATH is set to make ptls_extension_2024_research module available
 PYTHONPATH=.. python -m ptls.pl_train_module \
-    --config-dir conf --config-name coles_gnn_end2end_params_full_graph _no_orig_emb \
+    --config-dir conf --config-name coles_gnn_end2end_params_full_graph_no_orig_emb \
     data_module.train_data.splitter.split_count=2 \
     data_module.valid_data.splitter.split_count=2 \
     pl_module.coles_validation_metric.K=1 \
@@ -25,10 +25,10 @@ PYTHONPATH=.. python -m ptls.pl_train_module \
     gnn_link_predictor.link_predictor_name="one_layer" \
     pl_module.lp_criterion_name="BCELoss" \
     trainer.max_epochs=40 \
-    # device="cpu"
+    device="cpu"
 
 PYTHONPATH=.. python -m pl_inference_with_client_id    \
     model_path="${model_path}" \
     embed_file_name="${MODEL_NAME}_embeddings" \
     inference.batch_size=32 \
-    --config-dir conf --config-name coles_gnn_end2end_params_full_graph _no_orig_emb 
+    --config-dir conf --config-name coles_gnn_end2end_params_full_graph_no_orig_emb 
