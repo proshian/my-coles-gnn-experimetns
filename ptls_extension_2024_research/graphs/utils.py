@@ -108,7 +108,7 @@ class DotProductPredictor(nn.Module):
         self.add_sigmoid = add_sigmoid
 
     def apply_edges(self, src_feats, dst_feats):
-        return {'score': torch.dot(src_feats, dst_feats)}
+        return {'score': torch.sum(src_feats * dst_feats, dim=1)}
         # h = torch.cat([edges.src['h'], edges.dst['h']], 1)
         # return {'score': self.W2(self.act(self.W1(h)))}
         # return {'score': self.sigmoid(self.W2(F.relu(self.W1(h)))).squeeze(1)}
