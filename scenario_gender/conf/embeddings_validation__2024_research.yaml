@@ -147,6 +147,11 @@ features:
     read_params: 
       file_name: ${hydra:runtime.cwd}/data/coles_gnn_0_5__dotprod__has_orig_emb.pickle
     target_options: {}
+  coles_gnn_0_5__dotprod__has_orig_emb_GAT:
+    enabled: true
+    read_params: 
+      file_name: ${hydra:runtime.cwd}/data/coles_gnn_0_5__dotprod__has_orig_emb_GAT.pickle
+    target_options: {}
 
 external_scores: {}
 report: 

@@ -2,6 +2,8 @@
 # was 0.637
 # python -m ptls.pl_train_module \
 
+
+
 # PYTHONPATH is set to make ptls_extension_2024_research module available
 PYTHONPATH=.. python -m ptls.pl_train_module \
     --config-dir conf --config-name coles_gnn_end2end_params_full_graph \
@@ -16,11 +18,10 @@ PYTHONPATH=.. python -m ptls.pl_train_module \
     data_module.valid_batch_size=64 \
     data_module.valid_num_workers=4  \
     pl_module.loss_gamma=0.5 \
-    trainer.max_epochs=40
-    pl_module.seq_encoder.trx_encoder.client_item_embeddings.gnn_link_predictor.use_edge_weights="true"
-    pl_module.seq_encoder.trx_encoder.client_item_embeddings.gnn_link_predictor.link_predictor_name="dot_product"
-    # trainer.max_epochs=2
-
+    gnn_link_predictor.use_edge_weights="true" \
+    gnn_link_predictor.link_predictor_name="dot_product" \
+    # device="cpu"
+    # trainer.max_epochs=40 
 
 PYTHONPATH=.. python -m pl_inference_with_client_id    \
     model_path="models/coles_gnn_weighted__lp__has_orig.p" \

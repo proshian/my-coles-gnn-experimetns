@@ -16,10 +16,11 @@ PYTHONPATH=.. python -m ptls.pl_train_module \
     data_module.valid_batch_size=64 \
     data_module.valid_num_workers=4  \
     pl_module.loss_gamma=0.5 \
+    pl_module.seq_encoder.trx_encoder.client_item_embeddings.gnn_link_predictor.use_edge_weights="true" \
+    pl_module.seq_encoder.trx_encoder.client_item_embeddings.gnn_link_predictor.link_predictor_name="one_layer" \
+    pl_module.lp_criterion_name="BCELoss" \
     trainer.max_epochs=40
-    pl_module.seq_encoder.trx_encoder.client_item_embeddings.gnn_link_predictor.use_edge_weights="true"
-    pl_module.seq_encoder.trx_encoder.client_item_embeddings.gnn_link_predictor.link_predictor_name="one_layer"
-    pl_module.lp_criterion_name="BCELoss"
+
 
     # trainer.max_epochs=2
 
