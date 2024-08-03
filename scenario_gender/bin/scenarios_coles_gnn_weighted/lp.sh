@@ -20,8 +20,8 @@ PYTHONPATH=.. python -m ptls.pl_train_module \
     pl_module.loss_gamma=0.5 \
     gnn_link_predictor.use_edge_weights="true" \
     gnn_link_predictor.link_predictor_name="dot_product" \
+    trainer.max_epochs=40  \
     # device="cpu"
-    # trainer.max_epochs=40 
 
 PYTHONPATH=.. python -m pl_inference_with_client_id    \
     model_path="models/coles_gnn_weighted__lp__has_orig.p" \

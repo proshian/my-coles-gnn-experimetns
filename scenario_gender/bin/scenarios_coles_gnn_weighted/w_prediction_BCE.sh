@@ -16,14 +16,11 @@ PYTHONPATH=.. python -m ptls.pl_train_module \
     data_module.valid_batch_size=64 \
     data_module.valid_num_workers=4  \
     pl_module.loss_gamma=0.5 \
-    pl_module.seq_encoder.trx_encoder.client_item_embeddings.gnn_link_predictor.use_edge_weights="true" \
-    pl_module.seq_encoder.trx_encoder.client_item_embeddings.gnn_link_predictor.link_predictor_name="one_layer" \
+    gnn_link_predictor.use_edge_weights="true" \
+    gnn_link_predictor.link_predictor_name="one_layer" \
     pl_module.lp_criterion_name="BCELoss" \
-    trainer.max_epochs=40
-
-
-    # trainer.max_epochs=2
-
+    trainer.max_epochs=40 \
+    # device="cpu"
 
 PYTHONPATH=.. python -m pl_inference_with_client_id    \
     model_path="models/coles_gnn_weighted__w_pred_bce__has_orig.p" \

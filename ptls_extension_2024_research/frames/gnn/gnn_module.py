@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 
 from ptls_extension_2024_research.graphs.graph import ClientItemGraph, ClientItemGraphFull
-from ptls_extension_2024_research.graphs.utils import MLPPredictor, RandEdgeSampler, DotProductPredictor
+from ptls_extension_2024_research.graphs.utils import MLPPredictor, RandEdgeSampler, DotProductPredictor, OneLayerPredictor
 from ptls_extension_2024_research.graphs.static_models.gnn import GraphSAGE, GAT
 
 
@@ -257,6 +257,9 @@ class GnnLinkPredictor(nn.Module):
             return MLPPredictor(output_size, link_predictor_add_sigmoid)
         if link_predictor_name == 'dot_product':
             return DotProductPredictor(link_predictor_add_sigmoid)
+        if link_predictor_name == 'one_layer':
+            return OneLayerPredictor(h_feats=output_size, add_sigmoid=link_predictor_add_sigmoid)
+
         raise Exception(f'No such link predictor {link_predictor_name}')
 
     def forward(self, subgraph):
