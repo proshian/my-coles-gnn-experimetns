@@ -3,6 +3,10 @@
 # python -m ptls.pl_train_module \
 
 
+MODEL_NAME="coles_gnn_weighted__lp__has_orig"
+
+
+model_path="models/${model_name}_model.p"
 
 # PYTHONPATH is set to make ptls_extension_2024_research module available
 PYTHONPATH=.. python -m ptls.pl_train_module \
@@ -11,8 +15,8 @@ PYTHONPATH=.. python -m ptls.pl_train_module \
     data_module.valid_data.splitter.split_count=2 \
     pl_module.coles_validation_metric.K=1 \
     pl_module.lr_scheduler_partial.step_size=60 \
-    model_path="models/coles_gnn_weighted__lp__has_orig.p" \
-    logger_name="coles_gnn_weighted__lp__has_orig"  \
+    model_path="${model_path}" \
+    logger_name="${model_name}"  \
     data_module.train_batch_size=64 \
     data_module.train_num_workers=4 \
     data_module.valid_batch_size=64 \
@@ -24,7 +28,7 @@ PYTHONPATH=.. python -m ptls.pl_train_module \
     # device="cpu"
 
 PYTHONPATH=.. python -m pl_inference_with_client_id    \
-    model_path="models/coles_gnn_weighted__lp__has_orig.p" \
-    embed_file_name="coles_gnn_weighted__lp__has_orig" \
+    model_path="${model_path}" \
+    embed_file_name="${model_name}_embeddings" \
     inference.batch_size=32 \
-    --config-dir conf --config-name coles_gnn_end2end_params_full_graph 
+    --config-dir conf --config-name coles_gnn_end2end_params_full_graph
