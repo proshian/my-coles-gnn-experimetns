@@ -86,12 +86,7 @@ features:
   #   read_params: 
   #     file_name: ${hydra:runtime.cwd}/data/mles_model_small_batch_2_embeddings.pickle
   #   target_options: {}
-  coles_gnn_0_1: 
-    enabled: true
-    read_params: 
-      file_name: ${hydra:runtime.cwd}/data/coles_gnn_weighted__lp__has_orig.pickle
-    target_options: {}
- coles_gnn_0_5: 
+ coles_gnn_0_5:
     enabled: true
     read_params: 
       file_name: ${hydra:runtime.cwd}/data/coles_gnn_weighted__w_pred_bce__has_orig.pickle

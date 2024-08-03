@@ -82,8 +82,8 @@ echo "==== Device cuda:${CUDA_VISIBLE_DEVICES} will be used"
 echo ""
 echo "==== Start"
 
-echo "==== Scenario: COLEs with LP weighted \n\n"
-sh bin/scenarios_coles_gnn_weighted/lp.sh
+#echo "==== Scenario: COLEs with LP weighted \n\n"
+#sh bin/scenarios_coles_gnn_weighted/lp.sh
 
 echo "==== Scenario: COLEs with Weight Prediction BCE \n\n"
 sh bin/scenarios_coles_gnn_weighted/w_prediction_BCE.sh

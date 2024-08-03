@@ -19,6 +19,7 @@ PYTHONPATH=.. python -m ptls.pl_train_module \
     gnn_link_predictor.use_edge_weights="true" \
     gnn_link_predictor.link_predictor_name="one_layer" \
     pl_module.lp_criterion_name="MSELoss" \
+    gnn_link_predictor.link_predictor_add_sigmoid="false" \
     trainer.max_epochs=40 \
     # device="cpu"
 

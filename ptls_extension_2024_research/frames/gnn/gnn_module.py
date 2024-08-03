@@ -244,6 +244,7 @@ class GnnLinkPredictor(nn.Module):
         self.gnn = self._init_gnn(gnn_name, in_feats=embedding_dim, h_feats=output_size,
                                   use_edge_weights=use_edge_weights, **gnn_kwargs_dict)
         self.link_predictor = self._init_link_predictor(link_predictor_name, output_size, link_predictor_add_sigmoid)
+        self.real_link_predictor = OneLayerPredictor(output_size, add_sigmoid=True)
 
     def _init_gnn(self, gnn_name, in_feats, h_feats, use_edge_weights, **gnn_kwags):
         if gnn_name == 'GraphSAGE':
@@ -289,21 +290,38 @@ class GnnModule(pl.LightningModule):
         # loss
         self.neg_items_per_pos = neg_items_per_pos
         self.lp_criterion = getattr(nn, lp_criterion_name)()
-
+        self.real_lp_criterion = nn.BCELoss()
 
     def calc_loss(self, g, node_embeddings):
+        # get edges for scoring
         pos_src, pos_dst = g.edges()
-        pos_scores = self.gnn_link_predictor.link_predictor(pos_src, pos_dst, node_embeddings)
-        neg_src, neg_dst = self.neg_edge_sampler.sample(g,
-            self.neg_items_per_pos * g.number_of_edges())
-        neg_scores = self.gnn_link_predictor.link_predictor(neg_src, neg_dst, node_embeddings)
-        scores = torch.cat([pos_scores, neg_scores])
+        neg_src, neg_dst = self.neg_edge_sampler.sample(g, self.neg_items_per_pos * g.number_of_edges())
+
+        # score weigths
+        pos_scores_weights = self.gnn_link_predictor.link_predictor(pos_src, pos_dst, node_embeddings)
+        neg_scores_weights = self.gnn_link_predictor.link_predictor(neg_src, neg_dst, node_embeddings)
+        scores_weights = torch.cat([pos_scores_weights, neg_scores_weights])
         # `like` operations ensure proper device and shape. The shape has to be EXACTLY the same as scores.
-        labels = torch.cat([torch.ones_like(pos_scores), torch.zeros_like(neg_scores)]) 
+        if self.gnn_link_predictor.use_edge_weights:
+            pos_labels_weights = g.edata['weight'].unsqueeze(1)
+        else:
+            pos_labels_weights = torch.ones_like(pos_scores)
+        labels_weights = torch.cat([pos_labels_weights, torch.zeros_like(neg_scores_weights)])
+
+        # score LP
+        pos_scores_lp = self.gnn_link_predictor.real_link_predictor(pos_src, pos_dst, node_embeddings)
+        neg_scores_lp = self.gnn_link_predictor.real_link_predictor(neg_src, neg_dst, node_embeddings)
+        scores_lp = torch.cat([pos_scores_lp, neg_scores_lp])
+        # `like` operations ensure proper device and shape. The shape has to be EXACTLY the same as scores.
+        pos_labels_lp = torch.ones_like(pos_scores_lp)
+        labels_lp = torch.cat([pos_labels_lp, torch.zeros_like(neg_scores_lp)])
+
         # print(scores.device, labels.device)
         # print(scores.shape, labels.shape)
-        loss = self.lp_criterion(scores, labels)
-        return loss
+        loss_for_weights = self.lp_criterion(scores_weights, labels_weights)
+        loss_for_lp = self.real_lp_criterion(scores_lp, labels_lp)
+
+        return 0.5 * loss_for_weights + 0.5 * loss_for_lp
 
 
 

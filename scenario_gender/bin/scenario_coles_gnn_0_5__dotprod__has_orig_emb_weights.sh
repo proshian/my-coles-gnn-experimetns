@@ -16,8 +16,8 @@ PYTHONPATH=.. python -m ptls.pl_train_module \
     data_module.valid_batch_size=64 \
     data_module.valid_num_workers=4  \
     pl_module.loss_gamma=0.5 \
-    trainer.max_epochs=40
-    pl_module.seq_encoder.trx_encoder.client_item_embeddings.gnn_link_predictor.link_predictor_name="dot_product"
+    trainer.max_epochs=40 \
+    pl_module.seq_encoder.trx_encoder.client_item_embeddings.gnn_link_predictor.link_predictor_name="dot_product" \
     pl_module.seq_encoder.trx_encoder.client_item_embeddings.gnn_link_predictor.link_predictor_name="true"
     # trainer.max_epochs=2
     

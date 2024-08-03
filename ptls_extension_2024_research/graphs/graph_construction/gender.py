@@ -7,13 +7,13 @@ from ptls_extension_2024_research.graphs.graph_construction.base import GraphBui
 
 class GenderGraphBuilder(GraphBuilder):
     def preprocess(self, df):
-        df['amount'] = df['amount'].apply(abs)
-        return df
-
-    def _build_weighted_edge_df(self, df, client_col, item_col):
         df = df[[client_col, item_col, 'amount']]
         df['amount'] = df['amount'].apply(abs)
         df['amount'] = np.log1p(abs(df['amount'])) * np.sign(df['amount'])
+        return df
+
+    def _build_weighted_edge_df(self, df, client_col, item_col):
+        df = preprocess(df)
 
         grouped_edges = df.groupby([client_col, item_col]).agg(sum)
         edge2sum_amount = dict(zip(grouped_edges.index, grouped_edges['amount']))
@@ -24,9 +24,9 @@ class GenderGraphBuilder(GraphBuilder):
         df_total = df[[client_col, item_col]].drop_duplicates()
 
         df_total['weight'] = df_total.apply(lambda row:
-                                            edge2sum_amount[(row['customer_id'], row['mcc_code'])] / item2sum[
-                                                row['mcc_code']], axis=1)
-        assert all(df_total['weight'] != 0)
+                                            edge2sum_amount[(row[client_col], row[item_col])] / item2sum[
+                                                row[item_col]], axis=1)
+        assert all(df_total['weight'] > 0) and all(df_total['weight'] <= 1)
         return df_total, client_col, item_col, 'weight'
 
     def _build_simple_edge_df(self, df, client_col, item_col):
