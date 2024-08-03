@@ -122,6 +122,24 @@ class DotProductPredictor(nn.Module):
             return g.edata['score'].sigmoid()
 
 
+class OneLayerPredictor(nn.Module):
+    def __init__(self, add_sigmoid=True):
+        super().__init__()
+        self.W1 = nn.Linear(h_feats * 2, 1)
+        self.add_sigmoid = add_sigmoid
+
+    def apply_edges(self, src_feats, dst_feats):
+        h = torch.cat([src_feats, dst_feats], 1)
+        return {'score': self.W1(h)}
+        # return {'score': self.sigmoid(self.W2(F.relu(self.W1(h)))).squeeze(1)}
+
+    def forward(self, src_list, dst_list, feats):
+        edge_scores = self.apply_edges(feats[src_list], feats[dst_list])
+        if not self.add_sigmoid:
+            return edge_scores['score']
+        return edge_scores['score'].sigmoid()
+
+
 def create_subgraph_with_all_neighbors(graph: dgl.DGLGraph, node_ids: torch.Tensor):
     # Find all neighbors by using the predecessors and successors
     in_neighbors = graph.in_edges(node_ids)[0].unique()
