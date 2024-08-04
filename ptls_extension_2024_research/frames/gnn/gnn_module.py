@@ -5,6 +5,7 @@ import torch.nn as nn
 from ptls_extension_2024_research.graphs.graph import ClientItemGraph, ClientItemGraphFull
 from ptls_extension_2024_research.graphs.utils import MLPPredictor, RandEdgeSampler, DotProductPredictor, OneLayerPredictor
 from ptls_extension_2024_research.graphs.static_models.gnn import GraphSAGE, GAT
+from sklearn.metrics import roc_auc_score
 
 
 
@@ -316,24 +317,30 @@ class GnnModule(pl.LightningModule):
         pos_labels_lp = torch.ones_like(pos_scores_lp)
         labels_lp = torch.cat([pos_labels_lp, torch.zeros_like(neg_scores_lp)])
 
+        scores_lp_np = scores_lp.clone().detach().cpu().numpy()
+        labels_lp_np = labels_lp.clone().detach().cpu().numpy()
+
         # print(scores.device, labels.device)
         # print(scores.shape, labels.shape)
         loss_for_weights = self.lp_criterion(scores_weights, labels_weights)
         loss_for_lp = self.real_lp_criterion(scores_lp, labels_lp)
 
-        return 0.5 * loss_for_weights + 0.5 * loss_for_lp
+        auc = roc_auc_score(labels_lp_np, scores_lp_np)
+
+        return 0.75 * loss_for_weights + 0.25 * loss_for_lp, auc
 
 
 
     def training_step(self, subgraph, _):
         subgraph_node_embeddings = self.gnn_link_predictor(subgraph)
-        return self.calc_loss(subgraph, subgraph_node_embeddings)
-    
+        train_loss, train_auc = self.calc_loss(subgraph, subgraph_node_embeddings)
+        return train_loss, train_auc
+
 
     def validation_step(self, subgraph, _):
         subgraph_node_embeddings = self.gnn_link_predictor(subgraph)
-        val_loss = self.calc_loss(subgraph, subgraph_node_embeddings)
-        return val_loss
+        val_loss, val_auc = self.calc_loss(subgraph, subgraph_node_embeddings)
+        return val_loss, val_auc
     
 
     def on_validation_epoch_end(self):
