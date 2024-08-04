@@ -74,7 +74,7 @@ metrics:
     score_func: sklearn.metrics.accuracy_score
     scorer_params: 
       needs_proba: false
-report_file: ${hydra:runtime.cwd}/results/scenario_gender_2024_research.txt
+report_file: ${hydra:runtime.cwd}/results/scenario_gender_2024_research_weighted_v2.txt
 features: 
   # coles_avg_pool: 
   #   enabled: true
@@ -86,10 +86,15 @@ features:
   #   read_params: 
   #     file_name: ${hydra:runtime.cwd}/data/mles_model_small_batch_2_embeddings.pickle
   #   target_options: {}
- coles_gnn_alpha-025:
+#  coles_gnn_alpha-025:
+#     enabled: true
+#     read_params: 
+#       file_name: ${hydra:runtime.cwd}/data/coles_gnn_weighted__w_pred_bce__has_orig_025.pickle
+#     target_options: {}
+ coles_gnn_alpha-025-no-orig:
     enabled: true
     read_params: 
-      file_name: ${hydra:runtime.cwd}/data/coles_gnn_weighted__w_pred_bce__has_orig_025.pickle
+      file_name: ${hydra:runtime.cwd}/data/coles_gnn_weighted__w_pred_mse__no_orig__025_embeddings.pickle
     target_options: {}
 external_scores: {}
 report: 
@@ -101,11 +106,11 @@ report:
       float_format: "{:.3f}"
       baseline_key: 
         - lgbm
-        - coles
+        # - coles
       split_columns: true
     accuracy: 
       float_format: "{:.3f}"
       baseline_key: 
         - lgbm
-        - coles
+        # - coles
       split_columns: true

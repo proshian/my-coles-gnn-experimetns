@@ -23,6 +23,7 @@ PYTHONPATH='..' SPARK_LOCAL_IP="127.0.0.1" spark-submit \
     --output_test_ids_path "data/test_ids.csv" \
     --log_file "results/dataset_gender.txt" \
     --save-orig-new-map-cols "mcc_code" \
+    --save-orig-new-client-id-map \
     --print_dataset_info
 
 # 152 sec with    --print_dataset_info

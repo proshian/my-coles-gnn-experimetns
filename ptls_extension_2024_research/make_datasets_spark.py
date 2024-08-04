@@ -104,6 +104,9 @@ class DatasetConverter:
             '--save-orig-new-map-cols', nargs='*', default=[],
             help='List of columns for which to save a CSV file with ' \
             'a mapping from original category feature values to their encodings.')
+        parser.add_argument(
+            '--save-orig-new-client-id-map', action='store_true',
+            help='Save a parquet file with a mapping from original client IDs to their encodings.')
 
 
         args = parser.parse_args(args)
@@ -511,6 +514,9 @@ class DatasetConverter:
                 col_target=col_target,
             )
 
+        if self.config.save_orig_new_client_id_map:
+            client_features = self.add_client_id_mapping(client_features)
+
         train, test, save_test_id = None, None, False
         if self.config.test_size == 'predefined':
             train, test = self.split_dataset_predefined(
@@ -533,6 +539,7 @@ class DatasetConverter:
         else:
             train = client_features
 
+            
         # description
         spark.sparkContext.setLocalProperty('callSite.short', 'save_features')
         self.save_features(
@@ -610,6 +617,21 @@ class DatasetConverter:
         df_encoder.toPandas().to_csv(output_path, index=False)
         logger.info(f'Saved encoder mapping for column "{col_name}" to {output_path}')
 
+
+    def add_client_id_mapping(self, df: DataFrame) -> DataFrame:
+        """Generate a new client ID for each original client ID and save the mapping."""
+        # I'm prety sure we can ommit `.distinct()`. Added just in case
+        new_id_df = df.select(self.config.col_client_id).distinct() \
+            .withColumn('encoded_client_id', F.row_number().over(Window.orderBy(self.config.col_client_id)) - 1)
+
+        # Save the original to new ID mapping
+        new_id_df.write.parquet(os.path.join(self.config.data_path, 'client_id_map.parquet'), mode='overwrite')
+
+        # Join with the original DataFrame to add the new client ID
+        df = df.join(new_id_df, on=self.config.col_client_id, how='left')
+
+        return df
+    
 
 if __name__ == '__main__':
     DatasetConverter().run()
