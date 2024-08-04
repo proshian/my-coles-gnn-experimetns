@@ -2,7 +2,7 @@
 # was 0.637
 # python -m ptls.pl_train_module \
 
-MODEL_NAME="coles_gnn_weighted__w_pred_bce__has_orig"
+MODEL_NAME="coles_gnn_weighted__w_pred_bce__has_orig__025"
 
 
 model_path="models/${MODEL_NAME}_model.p"

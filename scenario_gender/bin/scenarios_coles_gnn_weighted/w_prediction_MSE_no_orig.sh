@@ -3,7 +3,7 @@
 # python -m ptls.pl_train_module \
 
 
-MODEL_NAME="coles_gnn_weighted__w_pred_mse__has_orig"
+MODEL_NAME="coles_gnn_weighted__w_pred_mse__no_orig__025"
 
 
 model_path="models/${MODEL_NAME}_model.p"
@@ -27,11 +27,12 @@ PYTHONPATH=.. python -m ptls.pl_train_module \
     pl_module.lp_criterion_name="MSELoss" \
     gnn_link_predictor.link_predictor_add_sigmoid="false" \
     trainer.max_epochs=40 \
-    # device="cpu"
+    device="cpu"
 
 
 PYTHONPATH=.. python -m pl_inference_with_client_id    \
     model_path="${model_path}" \
     embed_file_name="${MODEL_NAME}_embeddings" \
     inference.batch_size=32 \
+    +inference.devices=0 \
     --config-dir conf --config-name coles_gnn_end2end_params_full_graph_no_orig_emb 

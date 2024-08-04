@@ -3,7 +3,7 @@
 # python -m ptls.pl_train_module \
 
 
-MODEL_NAME="coles_gnn_weighted__w_pred_mse__has_orig"
+MODEL_NAME="coles_gnn_weighted__w_pred_mse__has_orig__025"
 
 
 model_path="models/${MODEL_NAME}_model.p"
