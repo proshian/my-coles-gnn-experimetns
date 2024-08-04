@@ -1,3 +1,5 @@
+from typing import Tuple
+
 import torch
 import pytorch_lightning as pl
 from ptls.frames.abs_module import ABSModule
@@ -6,6 +8,7 @@ from ptls.frames.coles.metric import BatchRecallTopK
 from ptls.frames.coles.sampling_strategies import HardNegativePairSelector
 from ptls.nn.head import Head
 from ptls.nn.seq_encoder.containers import SeqEncoderContainer
+from ptls.data_load.padded_batch import PaddedBatch  # for typing
 
 from ptls_extension_2024_research import TrxEncoder_WithCIEmbeddings
 from ptls_extension_2024_research.nn.trx_encoder.client_item_encoder import StaticGNNTrainableClientItemEncoder
@@ -104,6 +107,7 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
     """
     def __init__(self,
                 seq_encoder: SeqEncoderContainer,
+                freeze_embeddings_outside_coles_batch: bool,
                 loss_gamma: float = 0.5,
                 coles_head=None,
                 coles_loss=None,
@@ -123,6 +127,7 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
         
         ci_embedder = self.get_ci_embedder_from_seq_encoder(seq_encoder)
         gnn = ci_embedder.gnn_link_predictor
+        self.data_adapter = ci_embedder.data_adapter
         self.client_item_g = ci_embedder.data_adapter.client_item_g
         rand_edge_sampler = RandEdgeSamplerFull(
             self.client_item_g.g, rand_edge_sampler_seed)
@@ -135,6 +140,8 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
         self._optimizer_partial = optimizer_partial
         self._lr_scheduler_partial = lr_scheduler_partial
         self.loss_gamma = loss_gamma
+        self.freeze_embeddings_outside_coles_batch = freeze_embeddings_outside_coles_batch
+        self.col_item_ids = seq_encoder.trx_encoder.col_item_ids
 
     def get_ci_embedder_from_seq_encoder(self, seq_encoder):
         return get_ci_embedder_from_seq_encoder(seq_encoder)
@@ -145,10 +152,22 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
     # def forward(self, x):
     #     pass
 
+    def coles_batch_to_client_and_item_ids(self, batch: Tuple[PaddedBatch, torch.Tensor]) -> Tuple[torch.Tensor, torch.Tensor]:
+        x, client_ids = batch
+        item_ids = x.payload[self.col_item_ids]
+        return client_ids, item_ids
+    
+    def convert_coles_ids_to_graph_ids(self, client_ids, item_ids):
+        item_ids = self.data_adapter.item_id2graph_id[item_ids]
+        return None, item_ids
+
+
     def training_step(self, batch, _):
         # Достать из батча client_ids и item_ids
         # В данном частном случае можно передавать что угодно, но в общем случае нужно решить этот оврпос
-        subgraph = self.client_item_g.create_subgraph(_, _)
+        coles_client_ids, coles_item_ids = self.coles_batch_to_client_and_item_ids(batch)
+        self.current_client_ids, self.current_item_ids = self.convert_coles_ids_to_graph_ids(coles_client_ids, coles_item_ids)
+        subgraph = self.client_item_g.create_subgraph(self.current_client_ids, self.current_item_ids)
         gnn_loss, gnn_auc = self.gnn_module.training_step(subgraph, _)
         coles_loss, log_list = self.coles_module._training_step(batch, _)
         full_loss = self.loss_gamma * coles_loss + (1-self.loss_gamma) * gnn_loss
@@ -161,6 +180,14 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
             self.log(f"coles/{el.name}", el.value, *el.args, **el.kwargs)
         return full_loss
         
+    def on_afer_backward(self) -> None:
+        if self.freeze_embeddings_outside_coles_batch:
+            return
+        node_feats = self.gnn_module.gnn_link_predictor.node_feats
+        freeze_mask = torch.zeros_like(node_feats.weight, dtype=torch.bool)
+        # freeze_mask[self.current_client_ids] = True
+        freeze_mask[self.current_item_ids] = True
+        node_feats.weight.grad[freeze_mask] = 0 
 
     def validation_step(self, batch, _):
         # Достать из батча client_ids и item_ids

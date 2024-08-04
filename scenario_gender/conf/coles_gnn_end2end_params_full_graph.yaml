@@ -98,6 +98,8 @@ pl_module:
     hidden_size: 1024
     bidir: false
     trainable_starter: static
+  
+  freeze_embeddings_outside_coles_batch: false
   loss_gamma: 0.5
   coles_head:
     _target_: ptls.nn.Head

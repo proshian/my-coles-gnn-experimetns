@@ -86,15 +86,26 @@ features:
   #   read_params: 
   #     file_name: ${hydra:runtime.cwd}/data/mles_model_small_batch_2_embeddings.pickle
   #   target_options: {}
- coles_gnn_0_5:
+ coles_gnn_0_5_w_pred_bce__has_orig:
     enabled: true
     read_params: 
       file_name: ${hydra:runtime.cwd}/data/coles_gnn_weighted__w_pred_bce__has_orig.pickle
     target_options: {}
- coles_gnn_0_9: 
+ coles_gnn_0_9_w_pred_mse__has_orig: 
     enabled: true
     read_params: 
       file_name: ${hydra:runtime.cwd}/data/coles_gnn_weighted__w_pred_mse__has_orig.pickle
+    target_options: {}
+
+ coles_gnn_0_5_w_pred_bce__no_orig:
+    enabled: true
+    read_params: 
+      file_name: ${hydra:runtime.cwd}/data/coles_gnn_weighted__w_pred_bce__no_orig_embeddings.pickle
+    target_options: {}
+ coles_gnn_0_9_w_pred_mse__no_orig: 
+    enabled: true
+    read_params: 
+      file_name: ${hydra:runtime.cwd}/data/coles_gnn_weighted__w_pred_mse__no_orig_embeddings.pickle
     target_options: {}
 external_scores: {}
 report: 
@@ -106,11 +117,11 @@ report:
       float_format: "{:.3f}"
       baseline_key: 
         - lgbm
-        - coles
+        # - coles
       split_columns: true
     accuracy: 
       float_format: "{:.3f}"
       baseline_key: 
         - lgbm
-        - coles
+        # - coles
       split_columns: true
