@@ -94,6 +94,8 @@ class ColesDataset(FeatureDict, torch.utils.data.Dataset):
         local_date = feature_arrays[self.col_time]
         indexes = self.splitter.split(local_date)
         return [{k: v[ix] for k, v in feature_arrays.items() if self.is_seq_feature(k, v)} for ix in indexes]
+        # return [{k: v[ix] if self.is_seq_feature(k, v) else v for k, v in feature_arrays.items() } for ix in indexes]
+
 
     @staticmethod
     def collate_fn(batch: List[Tuple[SplitsType, int]]

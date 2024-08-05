@@ -6,14 +6,14 @@ from ptls_extension_2024_research.graphs.graph_construction.base import GraphBui
 
 
 class GenderGraphBuilder(GraphBuilder):
-    def preprocess(self, df):
+    def preprocess(self, df, client_col, item_col):
         df = df[[client_col, item_col, 'amount']]
         df['amount'] = df['amount'].apply(abs)
-        df['amount'] = np.log1p(abs(df['amount'])) * np.sign(df['amount'])
+        df['amount'] = np.log1p(df['amount'])
         return df
 
     def _build_weighted_edge_df(self, df, client_col, item_col):
-        df = preprocess(df)
+        df = self.preprocess(df, client_col, item_col)
 
         grouped_edges = df.groupby([client_col, item_col]).agg(sum)
         edge2sum_amount = dict(zip(grouped_edges.index, grouped_edges['amount']))

@@ -1,6 +1,6 @@
-import sys
-import os
-sys.path.append(os.path.abspath('..'))
+import sys; import os; sys.path.append(os.path.abspath('..'))
+
+from typing import Set
 
 import argparse
 import logging
@@ -14,16 +14,21 @@ import torch
 from ptls_extension_2024_research.graphs.graph_construction.gender import GenderGraphBuilder
 from ptls_extension_2024_research.graphs.utils import create_subgraph_with_all_neighbors
 
+
+ENCODED_CLIENT_COL_NAME = 'encoded_client_id'
+
 logger = logging.getLogger(__name__)
+
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--data_path', type=os.path.abspath)
     parser.add_argument('--trx_file', type=str)
-    parser.add_argument('--col_client_id', type=str)
+    parser.add_argument('--orig_col_client_id', type=str)
     parser.add_argument('--col_item_id', type=str)
     parser.add_argument('--item_map_file_path', type=str)
+    parser.add_argument('--client_map_file_path', type=str)
     parser.add_argument('--cols_log_norm', nargs='*', default=[])
     parser.add_argument('--test_ids_path', type=os.path.abspath)
 
@@ -54,8 +59,15 @@ def parse_args(args=None):
     # args.__dict__['log_file'] = "results/dataset_gender.txt"
     # args.__dict__['use_weights'] = "true"
     
-    logger.info('Parsed args:\n' + '\n'.join([f'  {k:15}: {v}' for k, v in vars(args).items()]))
     return args
+
+
+def configure_logger(config) -> None:
+    if config.log_file is not None:
+        handlers = [logging.StreamHandler(), logging.FileHandler(config.log_file, mode='w')]
+    else:
+        handlers = None
+    logging.basicConfig(level=logging.INFO, format='%(funcName)-20s   : %(message)s', handlers=handlers)
 
 
 def encode_item_ids(df_data: pd.DataFrame, config) -> pd.DataFrame:
@@ -71,8 +83,21 @@ def encode_item_ids(df_data: pd.DataFrame, config) -> pd.DataFrame:
     return df
 
 
+def encode_client_ids(df_data: pd.DataFrame, config) -> pd.DataFrame:
+    client_map = pd.read_parquet(config.client_map_file_path)
+    assert set(client_map.columns) == {config.orig_col_client_id, ENCODED_CLIENT_COL_NAME}
+    client_map = client_map.astype({config.orig_col_client_id: df_data[config.orig_col_client_id].dtype})
+
+    df = df_data.merge(client_map, on=config.orig_col_client_id, how='left')
+    df = df.drop(columns = [config.orig_col_client_id])
+
+    assert not df[ENCODED_CLIENT_COL_NAME].isnull().values.any()
+    return df
+
+
 def preprocess_df(df_data, config):
     df_data = encode_item_ids(df_data, config)
+    df_data = encode_client_ids(df_data, config)
 
     logger.info(f"df_data.head() after item_encoding: \n{df_data.head()}")
 
@@ -82,11 +107,15 @@ def preprocess_df(df_data, config):
     return df_data
 
 
-def get_train_clients(df_data, config):
-    all_clients = set(df_data[config.col_client_id])
+def get_train_clients(df_data: pd.DataFrame, config) -> Set[int]:
+    encoded_client_ids_set__all = set(df_data[ENCODED_CLIENT_COL_NAME])
 
-    test_clients = pd.read_csv(config.test_ids_path)['customer_id']
-    train_clients = all_clients - set(test_clients)
+    original_test_client_ids = pd.read_csv(config.test_ids_path)
+    encoded_client_ids_set__test = set(
+        encode_client_ids(original_test_client_ids, config)[ENCODED_CLIENT_COL_NAME]
+    )
+    
+    train_clients = encoded_client_ids_set__all - encoded_client_ids_set__test
     return train_clients
 
 
@@ -96,7 +125,7 @@ def main_create_graph(config):
     df_data = pd.read_csv(os.path.join(config.data_path, config.trx_file))
     df_data = preprocess_df(df_data, config)
     full_g, client_id2full_graph_id, item_id2full_graph_id, real_items_cnt = GenderGraphBuilder().build(df=df_data,
-                                                                         client_col=config.col_client_id,
+                                                                         client_col=ENCODED_CLIENT_COL_NAME,
                                                                          item_col=config.col_item_id,
                                                                          use_weights=config.use_weights,
                                                                          )
@@ -107,6 +136,8 @@ def main_create_graph(config):
                os.path.join(config.output_graph_path, config.output_item_id2full_graph_id_file))
 
     # print(client_id2full_graph_id)
+
+    logger.info("Saved full graph")
 
     # create train graph
     train_clients = get_train_clients(df_data, config)
@@ -151,7 +182,11 @@ def main_create_graph(config):
 if __name__ == '__main__':
     _start = datetime.now()
     config = parse_args()
+    configure_logger(config)
+    logger.info('Parsed args:\n' + '\n'.join([f'  {k:15}: {v}' for k, v in vars(config).items()]))
+
     main_create_graph(config)
+
     _duration = datetime.now() - _start
     logger.info(f'Data collected in {_duration.seconds} sec ({_duration})')
 

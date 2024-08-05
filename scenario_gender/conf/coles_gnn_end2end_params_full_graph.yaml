@@ -44,6 +44,7 @@ data_module:
       cnt_min: 15
       cnt_max: 75
     data: ${dataset_unsupervised.train}
+    col_client_id: 'encoded_client_id'
   valid_data:
     _target_: ptls.frames.coles.ColesDataset
     splitter:
@@ -52,6 +53,7 @@ data_module:
       cnt_min: 25
       cnt_max: 100
     data: ${dataset_unsupervised.valid}
+    col_client_id: 'encoded_client_id'
   train_batch_size: 128
   train_num_workers: 8
   valid_batch_size: 1024
