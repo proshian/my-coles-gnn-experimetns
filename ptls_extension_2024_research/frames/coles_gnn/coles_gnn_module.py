@@ -159,6 +159,7 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
     
     def convert_coles_ids_to_graph_ids(self, client_ids, item_ids):
         item_ids = self.data_adapter.item_id2graph_id[item_ids]
+        client_ids = self.data_adapter.client_id2graph_id[client_ids]
         return None, item_ids
 
 
@@ -181,12 +182,13 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
         return full_loss
         
     def on_afer_backward(self) -> None:
-        if self.freeze_embeddings_outside_coles_batch:
+        if not self.freeze_embeddings_outside_coles_batch:
             return
         node_feats = self.gnn_module.gnn_link_predictor.node_feats
         freeze_mask = torch.zeros_like(node_feats.weight, dtype=torch.bool)
         # freeze_mask[self.current_client_ids] = True
         freeze_mask[self.current_item_ids] = True
+        freeze_mask[self.current_client_ids] = True
         node_feats.weight.grad[freeze_mask] = 0 
 
     def validation_step(self, batch, _):

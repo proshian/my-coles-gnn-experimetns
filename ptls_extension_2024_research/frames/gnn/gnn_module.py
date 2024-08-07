@@ -126,6 +126,7 @@ class ColesBatchToSubgraphConverterFull(torch.nn.Module):
         self.device = torch.device(device_name)
         self.client_item_g: ClientItemGraphFull = ClientItemGraphFull.from_graph_file(graph_file_path, device_name)
         self.item_id2graph_id = torch.load(item_id2graph_id_path).to(self.device)
+        self.client_id2graph_id = torch.load(client_id2graph_id_path).to(self.device)
 
     def get_subgraph_item_ids_from_coles_item_ids(self, 
                                                   subgraph_ids_to_graph_ids, 
@@ -135,13 +136,12 @@ class ColesBatchToSubgraphConverterFull(torch.nn.Module):
                                      in enumerate(subgraph_ids_to_graph_ids)}
         
         # print(self.item_id2graph_id[1])
-
         subgraph_item_ids = [
             [graph_ids_to_subgraph_ids[int(self.item_id2graph_id[int(item_id)])] for item_id in row]
             for row in item_ids]
         
-        subgraph_item_ids = torch.LongTensor(subgraph_item_ids).to(self.device)
-        subgraph_item_ids.requires_grad = False        
+        subgraph_item_ids = torch.tensor(
+            subgraph_item_ids, dtype=torch.int64, device=self.device, requires_grad=False)
         # print(subgraph_item_ids.shape)
 
         return subgraph_item_ids
@@ -153,9 +153,8 @@ class ColesBatchToSubgraphConverterFull(torch.nn.Module):
         """
         item_ids = item_ids.to(self.device)
         graph_item_ids = self.item_id2graph_id[item_ids]
-        
-        dummy_graph_client_ids = torch.zeros(1, device=self.device)
-        subgraph = self.client_item_g.create_subgraph(graph_item_ids, dummy_graph_client_ids)
+        graph_client_ids = self.client_id2graph_id[client_ids]
+        subgraph = self.client_item_g.create_subgraph(graph_item_ids, graph_client_ids)
         subgraph_ids_to_graph_ids = subgraph.ndata['_ID']
 
         subgraph_item_ids = self.get_subgraph_item_ids_from_coles_item_ids(
@@ -165,6 +164,7 @@ class ColesBatchToSubgraphConverterFull(torch.nn.Module):
         result = {
             'subgraph': subgraph,
             'subgraph_item_ids': subgraph_item_ids
+            
         }
 
         return result
