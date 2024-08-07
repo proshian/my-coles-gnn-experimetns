@@ -46,7 +46,7 @@ data_module:
     data: ${dataset_unsupervised.train}
     col_client_id: 'encoded_client_id'
   valid_data:
-    _target_: ptls.frames.coles.ColesDataset
+    _target_: ptls_extension_2024_research.ColesDataset
     splitter:
       _target_: ptls.frames.coles.split_strategy.SampleSlices
       split_count: 5
@@ -102,6 +102,7 @@ pl_module:
     trainable_starter: static
   
   freeze_embeddings_outside_coles_batch: false
+  gnn_loss_alpha: 0.5
   loss_gamma: 0.5
   coles_head:
     _target_: ptls.nn.Head

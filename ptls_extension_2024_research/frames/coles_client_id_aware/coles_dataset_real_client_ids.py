@@ -60,12 +60,14 @@ class ColesDataset(FeatureDict, torch.utils.data.Dataset):
         client_id = feature_arrays[self.col_client_id]
         if type(client_id) is int:
             return client_id
+        if type(client_id) is np.int32:
+            return int(client_id)
         if type(client_id) is str:
             if not client_id.isdigit():
                 raise ValueError("client_id is a string and doesn't represent an integer")
             client_id = int(client_id)
             return client_id
-        raise ValueError(f"client_id is of an unexpected type `{type(client_id)}`")
+        raise ValueError(f"client_id is of an unexpected type `{type(client_id)}`. Client id value: {client_id}")
     
     def _get_client_id(self, idx, feature_arrays) -> int:
         return idx if self.col_client_id is None else self._get_client_id_from_feature_arrays(feature_arrays)
