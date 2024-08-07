@@ -2,8 +2,8 @@
 # was 0.637
 # python -m ptls.pl_train_module \
 
-LOSS_GAMMA = 0.5
-GNN_LOSS_ALPHA = 0.5
+LOSS_GAMMA=0.5
+GNN_LOSS_ALPHA=0.5
 
 MODEL_NAME="coles_gnn_weighted__w_pred_bce__no_orig__alpha_${GNN_LOSS_ALPHA}__gamma_${LOSS_GAMMA}__requires_grad_false"
 
