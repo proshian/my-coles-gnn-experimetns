@@ -101,7 +101,8 @@ pl_module:
     bidir: false
     trainable_starter: static
   
-  freeze_embeddings_outside_coles_batch: True
+  freeze_embeddings_outside_coles_batch: false
+  gnn_loss_alpha: 0.5
   loss_gamma: 0.5
   coles_head:
     _target_: ptls.nn.Head

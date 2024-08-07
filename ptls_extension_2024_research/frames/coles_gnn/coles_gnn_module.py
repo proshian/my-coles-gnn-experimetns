@@ -109,6 +109,7 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
                 seq_encoder: SeqEncoderContainer,
                 freeze_embeddings_outside_coles_batch: bool,
                 loss_gamma: float = 0.5,
+                gnn_loss_alpha: float = 0.5,
                 coles_head=None,
                 coles_loss=None,
                 coles_validation_metric=None,
@@ -134,6 +135,7 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
         
         self.gnn_module = GnnModule(gnn, optimizer_partial=None, lr_scheduler_partial=None, 
                                     neg_edge_sampler=rand_edge_sampler,
+                                    gnn_loss_alpha=gnn_loss_alpha,
                                     neg_items_per_pos = neg_items_per_pos, 
                                     lp_criterion_name = lp_criterion_name)
         
@@ -197,7 +199,7 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
         self.coles_module.validation_step(batch, _)
         gnn_loss, gnn_auc = self.gnn_module.validation_step(subgraph, _)
         self.log('gnn/valid/gnn_loss', gnn_loss)
-        self.log('gnn/valid/lp_auc', gnn_loss)
+        self.log('gnn/valid/lp_auc', gnn_auc)
 
     def _on_validation_epoch_end__coles(self):
         self.log(f'coles/valid/{self.coles_module.metric_name}', self.coles_module._validation_metric.compute(), prog_bar=True)

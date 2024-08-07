@@ -280,13 +280,17 @@ class GnnModule(pl.LightningModule):
                  optimizer_partial,
                  lr_scheduler_partial,
                  neg_edge_sampler,
+                 gnn_loss_alpha: float,
                  neg_items_per_pos: int=1,
                  lp_criterion_name: str='BCELoss',):
+        assert 0 <= gnn_loss_alpha <= 1
         super().__init__()
         self.gnn_link_predictor = gnn_link_predictor
         self._optimizer_partial = optimizer_partial
         self._lr_scheduler_partial = lr_scheduler_partial
         self.neg_edge_sampler = neg_edge_sampler
+        
+        self.gnn_loss_alpha = gnn_loss_alpha
 
         # loss
         self.neg_items_per_pos = neg_items_per_pos
@@ -327,7 +331,7 @@ class GnnModule(pl.LightningModule):
 
         auc = roc_auc_score(labels_lp_np, scores_lp_np)
 
-        return 0.75 * loss_for_weights + 0.25 * loss_for_lp, auc
+        return (1-self.gnn_loss_alpha)* loss_for_weights + self.gnn_loss_alpha * loss_for_lp, auc
 
 
 
