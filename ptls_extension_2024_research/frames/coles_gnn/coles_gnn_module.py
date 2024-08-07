@@ -185,10 +185,9 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
         if not self.freeze_embeddings_outside_coles_batch:
             return
         node_feats = self.gnn_module.gnn_link_predictor.node_feats
-        freeze_mask = torch.zeros_like(node_feats.weight, dtype=torch.bool)
-        # freeze_mask[self.current_client_ids] = True
-        freeze_mask[self.current_item_ids] = True
-        freeze_mask[self.current_client_ids] = True
+        freeze_mask = torch.ones_like(node_feats.weight, dtype=torch.bool)
+        freeze_mask[self.current_item_ids] = False
+        freeze_mask[self.current_client_ids] = False
         node_feats.weight.grad[freeze_mask] = 0 
 
     def validation_step(self, batch, _):
