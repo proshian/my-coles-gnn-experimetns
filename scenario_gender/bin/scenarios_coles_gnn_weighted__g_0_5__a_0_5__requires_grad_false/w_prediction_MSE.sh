@@ -31,7 +31,7 @@ PYTHONPATH=.. python -m ptls.pl_train_module \
     gnn_link_predictor.link_predictor_add_sigmoid="false" \
     pl_module.freeze_embeddings_outside_coles_batch="true" \
     trainer.max_epochs=40 \
-    device="cpu"
+    # device="cpu"
 
 
 PYTHONPATH=.. python -m pl_inference_with_client_id    \

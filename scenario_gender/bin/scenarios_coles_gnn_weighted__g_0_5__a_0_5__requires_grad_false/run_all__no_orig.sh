@@ -86,10 +86,10 @@ echo "==== Start"
 #sh bin/scenarios_coles_gnn_weighted/lp.sh
 
 echo "==== Scenario: COLEs with Weight Prediction BCE \n\n"
-sh bin/scenarios_coles_gnn_weighted/w_prediction_BCE_no_orig.sh
+sh bin/scenarios_coles_gnn_weighted__g_0_5__a_0_5__requires_grad_false/w_prediction_BCE_no_orig.sh
 
 echo "==== Scenario: COLEs with Weight Prediction MSE \n\n"
-sh bin/scenarios_coles_gnn_weighted/w_prediction_MSE_no_orig.sh
+sh bin/scenarios_coles_gnn_weighted__g_0_5__a_0_5__requires_grad_false/w_prediction_MSE_no_orig.sh
 
 
 
