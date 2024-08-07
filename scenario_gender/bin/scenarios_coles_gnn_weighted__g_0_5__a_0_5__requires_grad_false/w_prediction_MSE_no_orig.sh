@@ -2,13 +2,13 @@
 # was 0.637
 # python -m ptls.pl_train_module \
 
-LOSS_GAMMA = 0.5
-GNN_LOSS_ALPHA = 0.5
+LOSS_GAMMA=0.5
+GNN_LOSS_ALPHA=0.5
 
-MODEL_NAME="coles_gnn_weighted__w_pred_bce__no_orig__alpha_${GNN_LOSS_ALPHA}__gamma_${LOSS_GAMMA}__requires_grad_false"
+MODEL_NAME="coles_gnn_weighted__w_pred_mse__no_orig__alpha_${GNN_LOSS_ALPHA}__gamma_${LOSS_GAMMA}__requires_grad_false"
+
 
 model_path="models/${MODEL_NAME}_model.p"
-
 
 # PYTHONPATH is set to make ptls_extension_2024_research module available
 PYTHONPATH=.. python -m ptls.pl_train_module \
@@ -27,10 +27,11 @@ PYTHONPATH=.. python -m ptls.pl_train_module \
     pl_module.gnn_loss_alpha=${GNN_LOSS_ALPHA} \
     gnn_link_predictor.use_edge_weights="true" \
     gnn_link_predictor.link_predictor_name="one_layer" \
-    pl_module.lp_criterion_name="BCELoss" \
+    pl_module.lp_criterion_name="MSELoss" \
+    gnn_link_predictor.link_predictor_add_sigmoid="false" \
     pl_module.freeze_embeddings_outside_coles_batch="true" \
     trainer.max_epochs=40 \
-    # device="cpu"
+    device="cpu"
 
 
 PYTHONPATH=.. python -m pl_inference_with_client_id    \
