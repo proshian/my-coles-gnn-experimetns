@@ -5,7 +5,7 @@
 LOSS_GAMMA = 0.5
 GNN_LOSS_ALPHA = 0.5
 
-MODEL_NAME="coles_gnn_weighted__w_pred_bce__has_orig__alpha_${GNN_LOSS_ALPHA}__gamma_${LOSS_GAMMA}__requires_grad_false"
+MODEL_NAME="coles_gnn_weighted__w_pred_mse__has_orig__alpha_${GNN_LOSS_ALPHA}__gamma_${LOSS_GAMMA}__requires_grad_false"
 
 model_path="models/${MODEL_NAME}_model.p"
 
