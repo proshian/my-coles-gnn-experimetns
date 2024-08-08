@@ -37,4 +37,5 @@ PYTHONPATH=.. python -m pl_inference_with_client_id    \
     model_path="${model_path}" \
     embed_file_name="${MODEL_NAME}_embeddings" \
     inference.batch_size=32 \
+    +inference.devices=0 \
     --config-dir conf --config-name coles_gnn_end2end_params_full_graph_no_orig_emb 

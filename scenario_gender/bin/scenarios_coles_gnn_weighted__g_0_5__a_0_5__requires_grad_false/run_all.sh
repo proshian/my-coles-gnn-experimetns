@@ -91,7 +91,7 @@ sh bin/scenarios_coles_gnn_weighted__g_0_5__a_0_5__requires_grad_false/w_predict
 
 
 # Compare
-rm results/scenario_gender_2024_research.txt
+rm results/scenario_gender_2024_research_weighted_freeze.txt
 # rm -r conf/embeddings_validation.work/
 python -m embeddings_validation \
-    --config-dir conf --config-name embeddings_validation__2024_research_weighted_v2 +workers=10 +total_cpu_count=4
+    --config-dir conf --config-name embeddings_validation__2024_research_weighted__freeze +workers=10 +total_cpu_count=4
