@@ -162,7 +162,7 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
     def convert_coles_ids_to_graph_ids(self, client_ids, item_ids):
         item_ids = self.data_adapter.item_id2graph_id[item_ids]
         client_ids = self.data_adapter.client_id2graph_id[client_ids]
-        return None, item_ids
+        return client_ids, item_ids
 
 
     def training_step(self, batch, _):
@@ -172,7 +172,27 @@ class ColesGnnModuleFullGraph(pl.LightningModule):
         self.current_client_ids, self.current_item_ids = self.convert_coles_ids_to_graph_ids(coles_client_ids, coles_item_ids)
         subgraph = self.client_item_g.create_subgraph(self.current_client_ids, self.current_item_ids)
         gnn_loss, gnn_auc = self.gnn_module.training_step(subgraph, _)
-        coles_loss, log_list = self.coles_module._training_step(batch, _)
+
+
+        # coles_loss, log_list = self.coles_module._training_step(batch, _)
+        log_list = []
+
+        y_h, y = self.shared_step(*batch)
+        coles_loss = self._loss(y_h, y)
+        log_list.append(LogLstEl('loss', coles_loss, [], {}))
+        if type(batch) is tuple:
+            x, y = batch
+            if isinstance(x, PaddedBatch):
+                log_list.append(LogLstEl(
+                    'seq_len', x.seq_lens.float().mean(), [], {'prog_bar':True}))
+        else:
+            log_list.append(LogLstEl('seq_len', -1, [], {'prog_bar':True}))
+            # this code should not be reached
+            raise AssertionError('batch is not a tuple')
+        
+
+
+
         full_loss = self.loss_gamma * coles_loss + (1-self.loss_gamma) * gnn_loss
 
 
